@@ -340,7 +340,7 @@ def get_essay_topic():
         return jsonify({"error": "Missing sessionid parameter"}), 400
     
     # 获取默认题目（可以扩展为根据session返回不同题目）
-    essay_topics = get_essay_topics()['essay-topics']
+    essay_topics = get_essay_topics()['essay_topics']
     topic_md = essay_topics.get('default', '# 暂无题目\n\n请联系管理员添加题目内容。')
     
     logger.info(f"Retrieved essay topic for session: {sessionid}")
