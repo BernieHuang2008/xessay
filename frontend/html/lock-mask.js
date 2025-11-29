@@ -110,11 +110,6 @@ class LockMask {
         }
     }
 
-    // 检查是否已锁定
-    isLocked() {
-        return this.isLocked;
-    }
-
     // 强制解锁（紧急情况使用）
     forceUnlock() {
         console.warn('[LockMask] 强制解锁');
@@ -129,7 +124,7 @@ const globalLockMask = new LockMask();
 window.showLockMask = () => globalLockMask.showLock();
 window.hideLockMask = () => globalLockMask.hideLock();
 window.withLock = (fn, ...args) => globalLockMask.withLock(fn, ...args);
-window.isSystemLocked = () => globalLockMask.isLocked();
+window.isSystemLocked = () => globalLockMask.isLocked;
 window.forceUnlock = () => globalLockMask.forceUnlock();
 
 // 页面卸载时自动解锁
