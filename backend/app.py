@@ -12,10 +12,13 @@ import tempfile
 import re
 
 # 导入配置文件
-try:
-    from config import PADDLE_OCR_API_URL, PADDLE_OCR_TOKEN, LLM_API_URL, LLM_API_KEY, LLM_MODEL
-except ImportError:
-    print("警告: config.py 文件不存在，请复制 config.py.template 为 config.py 并填写正确的配置")
+if os.path.exists("config.json"):
+    with open("config.json") as f:
+        CONFIG = json.load(f)
+    PADDLE_OCR_API_URL = CONFIG.get("PADDLE_OCR_API_URL", "")
+    PADDLE_OCR_TOKEN = CONFIG.get("PADDLE_OCR_TOKEN", "")
+else:
+    print("警告: config.json 文件不存在，请复制 config.template.json 为 config.json 并填写正确的配置")
     # 使用默认配置
     PADDLE_OCR_API_URL = "https://c8s16af3r0gd36g6.aistudio-app.com/layout-parsing"
     PADDLE_OCR_TOKEN = "your_paddle_ocr_token_here"
