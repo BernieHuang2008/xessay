@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作文训练系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .session-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .training-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .training-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .training-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .training-card .icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .training-card h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .training-card p {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: white;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">作文训练系统</div>
+            <div class="session-info" id="sessionInfo">
+                Session ID: <span id="sessionId"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="training-grid" id="trainingGrid">
+            <div class="training-card" onclick="navigateToTraining('analysis')">
+                <div class="icon">📝</div>
+                <h3>审题训练</h3>
+                <p>分析作文题目，训练审题能力，提高写作准确性</p>
+            </div>
+
+            <div class="training-card" onclick="navigateToTraining('outline_result')">
+                <div class="icon">📊</div>
+                <h3>审题结果</h3>
+                <p>查看AI对你的提纲的评价</p>
+            </div>
+            
+            <div class="training-card" onclick="navigateToTraining('imitation')">
+                <div class="icon">✍️</div>
+                <h3>仿写训练</h3>
+                <p>模仿优秀范文，学习写作技巧和表达方式</p>
+            </div>
+
+            <div class="training-card" onclick="navigateToTraining('practice')">
+                <div class="icon">🎯</div>
+                <h3>综合练习</h3>
+                <p>综合运用所学技巧，进行完整的写作练习</p>
+            </div>
+
+            <div class="training-card" onclick="navigateToTraining('review')">
+                <div class="icon">📊</div>
+                <h3>学习回顾</h3>
+                <p>回顾学习成果，查看历史作业和进步情况</p>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            正在加载session信息...
+        </div>
+    </div>
+
+    <script src="base_url.js"></script>
+    <script src="user-utils.js"></script>
+    <script src="lock-mask.js"></script>
+    <script>
+        let currentSessionId = '';
+        let currentUser = '';
+
+        // 获取URL参数
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // 获取或设置用户名
+        function getCurrentUser() {
+            let username = localStorage.getItem('username');
+            if (!username) {
+                username = prompt('请输入您的用户名：');
+                if (username && username.trim()) {
+                    localStorage.setItem('username', username.trim());
+                    return username.trim();
+                } else {
+                    username = 'guest_' + Date.now();
+                    localStorage.setItem('username', username);
+                    return username;
+                }
+            }
+            return username;
+        }
+
+        // 初始化页面
+        async function initializePage() {
+            currentUser = getCurrentUser();
+            currentSessionId = getUrlParameter('sessionid');
+            
+            // 如果没有指定sessionid，显示session列表
+            if (!currentSessionId) {
+                showSessionList();
+                return;
+            }
+
+            // 如果有sessionid，显示训练页面
+            showTrainingPage();
+        }
+
+        // 显示session列表
+        async function showSessionList() {
+            document.getElementById('sessionId').textContent = currentUser;
+            document.getElementById('sessionInfo').textContent = `用户：${currentUser}`;
+            
+            // 创建session列表HTML
+            const sessionListHTML = `
+                <div style="max-width: 800px; width: 100%; background: rgba(255, 255, 255, 0.9); border-radius: 15px; padding: 30px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2>我的学习记录</h2>
+                        <div>
+                            <button onclick="showCreateSessionModal()" style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 5px; margin-right: 10px; cursor: pointer;">新建Session</button>
+                            <button onclick="showSettings()" style="background: #764ba2; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">设置</button>
+                        </div>
+                    </div>
+                    <div id="sessionListContent">
+                        <div style="text-align: center; padding: 20px;">加载中...</div>
+                    </div>
+                </div>
+            `;
+            
+            document.querySelector('.main-container').innerHTML = sessionListHTML;
+            
+            // 加载用户的session列表
+            await loadUserSessions();
+        }
+
+        // 加载用户session列表
+        async function loadUserSessions() {
+            return withLock(async () => {
+                try {
+                    const response = await fetch(`${BASE_URL}/getUserSessions?username=${encodeURIComponent(currentUser)}`);
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        displaySessionList(data.sessions);
+                    } else {
+                        document.getElementById('sessionListContent').innerHTML = `
+                            <div style="text-align: center; padding: 20px; color: red;">
+                                加载失败: ${data.error || '未知错误'}
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('加载session列表失败:', error);
+                    document.getElementById('sessionListContent').innerHTML = `
+                        <div style="text-align: center; padding: 20px; color: red;">
+                            网络错误，请检查后端服务是否正常运行
+                        </div>
+                    `;
+                    throw error;
+                }
+            });
+        }
+
+        // 显示session列表
+        function displaySessionList(sessions) {
+            if (sessions.length === 0) {
+                document.getElementById('sessionListContent').innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <p>您还没有创建任何学习记录</p>
+                        <p style="margin-top: 10px;">点击"新建Session"开始您的学习之旅</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const sessionsHTML = sessions.map(session => `
+                <div onclick="enterSession('${session.session_id}')" style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: background-color 0.2s;" onmouseover="this.style.backgroundColor='#f5f5f5'" onmouseout="this.style.backgroundColor='white'">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4 style="margin: 0 0 5px 0; color: #333;">${session.session_name}</h4>
+                            <p style="margin: 0; color: #666; font-size: 14px;">题目：${session.question_id} | 提纲数：${session.outline_count}</p>
+                        </div>
+                        <div style="text-align: right; color: #888; font-size: 12px;">
+                            <div>创建：${new Date(session.created_at).toLocaleDateString()}</div>
+                            <div>更新：${session.last_updated ? new Date(session.last_updated).toLocaleDateString() : '无'}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('sessionListContent').innerHTML = sessionsHTML;
+        }
+
+        // 显示创建session弹窗
+        async function showCreateSessionModal() {
+            // 先加载题目列表
+            try {
+                const response = await fetch(`${BASE_URL}/getAllQuestions`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    alert('加载题目列表失败：' + data.error);
+                    return;
+                }
+
+                const questionsOptions = data.questions.map(q => 
+                    `<option value="${q.question_id}">${q.question_id} - ${q.title}</option>`
+                ).join('');
+
+                const modalHTML = `
+                    <div id="createSessionModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000;">
+                        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 500px; width: 90%;">
+                            <h3 style="margin-bottom: 20px;">创建新的学习记录</h3>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">选择题目：</label>
+                                <select id="questionSelect" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    ${questionsOptions}
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 5px;">Session名称：</label>
+                                <input type="text" id="sessionNameInput" placeholder="默认使用题目ID" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="text-align: right;">
+                                <button onclick="closeCreateSessionModal()" style="background: #ccc; color: #333; border: none; padding: 8px 16px; border-radius: 4px; margin-right: 10px; cursor: pointer;">取消</button>
+                                <button onclick="createNewSession()" style="background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">创建</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            } catch (error) {
+                console.error('加载题目列表失败:', error);
+                alert('加载题目列表失败，请检查网络连接');
+            }
+        }
+
+        // 关闭创建session弹窗
+        function closeCreateSessionModal() {
+            const modal = document.getElementById('createSessionModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // 创建新session
+        async function createNewSession() {
+            const questionId = document.getElementById('questionSelect').value;
+            const sessionName = document.getElementById('sessionNameInput').value || questionId;
+            
+            return withLock(async () => {
+                try {
+                    const response = await fetch(`${BASE_URL}/createSession`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: currentUser,
+                            question_id: questionId,
+                            session_name: sessionName
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        closeCreateSessionModal();
+                        alert('创建成功！');
+                        await loadUserSessions(); // 重新加载列表
+                    } else {
+                        alert('创建失败：' + data.error);
+                    }
+                } catch (error) {
+                    console.error('创建session失败:', error);
+                    alert('创建失败，请检查网络连接');
+                    throw error;
+                }
+            });
+        }
+
+        // 进入session
+        function enterSession(sessionId) {
+            window.location.href = `index.html?sessionid=${sessionId}`;
+        }
+
+        // 显示设置页面
+        function showSettings() {
+            const settingsHTML = `
+                <div style="max-width: 500px; width: 100%; background: rgba(255, 255, 255, 0.9); border-radius: 15px; padding: 30px;">
+                    <h2 style="margin-bottom: 20px;">用户设置</h2>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px;">用户名：</label>
+                        <input type="text" id="usernameInput" value="${currentUser}" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                    <div style="text-align: right;">
+                        <button onclick="showSessionList()" style="background: #ccc; color: #333; border: none; padding: 10px 20px; border-radius: 4px; margin-right: 10px; cursor: pointer;">返回</button>
+                        <button onclick="saveSettings()" style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">保存</button>
+                    </div>
+                </div>
+            `;
+            
+            document.querySelector('.main-container').innerHTML = settingsHTML;
+        }
+
+        // 保存设置
+        function saveSettings() {
+            const newUsername = document.getElementById('usernameInput').value.trim();
+            if (newUsername && newUsername !== currentUser) {
+                localStorage.setItem('username', newUsername);
+                currentUser = newUsername;
+                alert('用户名已更新！');
+            }
+            showSessionList();
+        }
+
+        // 显示训练页面（当有sessionid时）
+        async function showTrainingPage() {
+            document.getElementById('sessionId').textContent = currentSessionId;
+            
+            // 获取session详情
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('trainingGrid').style.display = 'none';
+                
+                const response = await fetch(`${BASE_URL}/getSessionDetail?sessionid=${currentSessionId}`);
+                const sessionData = await response.json();
+                
+                // 更新session信息显示
+                document.getElementById('sessionInfo').innerHTML = `
+                    <a href="index.html" style="color: #667eea; text-decoration: none; margin-right: 10px;">← 返回列表</a>
+                    Session: ${sessionData.session_name || sessionData.session_id} | 用户: ${sessionData.username || sessionData.user_name || '未知'} | 状态: ${sessionData.status || 'active'}
+                `;
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('trainingGrid').style.display = 'grid';
+            } catch (error) {
+                console.error('获取session信息失败:', error);
+                document.getElementById('loading').textContent = '加载session信息失败，但仍可使用训练功能';
+                document.getElementById('trainingGrid').style.display = 'grid';
+            }
+        }
+
+        // 导航到训练页面
+        function navigateToTraining(type) {
+            const pages = {
+                'analysis': 'analysis.html',
+                'outline_result': 'outline_result.html',
+                'imitation': 'imitation.html',
+                'practice': 'practice.html',
+                'review': 'review.html'
+            };
+
+            const page = pages[type];
+            if (page) {
+                window.location.href = `${page}?sessionid=${currentSessionId}`;
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

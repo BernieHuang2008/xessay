@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>仿写训练 - 作文训练系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            /* background: linear-gradient(135deg, #ffffff 0%, #764ba2 100%); */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn {
+            background: #ffffff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .session-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            height: calc(100vh - 80px);
+            flex-direction: column;
+        }
+
+        .content-section {
+            flex: 1;
+            /* background: rgba(255, 255, 255, 0.95); */
+            /* border-radius: 12px; */
+            padding: 20px;
+            /* box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); */
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .content-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ffffff;
+        }
+
+        .original-text {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #444;
+            min-height: 200px;
+            max-height: calc(100% - 150px);
+        }
+
+        .segment-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .segment-btn {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            min-width: 60px;
+            text-align: center;
+            color: black;
+        }
+
+        .segment-btn.active {
+            background: #5a6fd8;
+            color: white;
+            border-color: #ffffff;
+        }
+
+        .segment-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .segment-btn.active:hover {
+            background: #5a6fd8;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .mode-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .mode-btn.active {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .mode-btn:hover {
+            background: #e9ecef;
+        }
+
+        .mode-btn.active:hover {
+            background: #218838;
+        }
+
+        .submit-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #5a6fd8;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .submit-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .drawing-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawing-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ffffff;
+        }
+
+        .drawing-area {
+            flex: 1;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .previous-work {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .no-previous-work {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #999;
+            font-size: 16px;
+            background: #f9f9f9;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .error {
+            background: #ffe6e6;
+            color: #d63031;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #fab1a0;
+        }
+
+        .success {
+            background: #e6ffe6;
+            color: #00b894;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #a8e6cf;
+        }
+
+        /* Markdown样式 */
+        .original-text h1,
+        .original-text h2,
+        .original-text h3 {
+            margin: 15px 0 10px 0;
+            color: #333;
+        }
+
+        .original-text h1 {
+            font-size: 22px;
+        }
+
+        .original-text h2 {
+            font-size: 20px;
+        }
+
+        .original-text h3 {
+            font-size: 18px;
+        }
+
+        .original-text p {
+            margin: 10px 0;
+            text-align: justify;
+        }
+
+        .original-text ul,
+        .original-text ol {
+            margin: 10px 0 10px 20px;
+        }
+
+        .original-text li {
+            margin: 5px 0;
+        }
+
+        .original-text blockquote {
+            border-left: 4px solid #ffffff;
+            padding-left: 15px;
+            margin: 15px 0;
+            font-style: italic;
+            color: #555;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .original-text code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                height: auto;
+            }
+
+            .content-section,
+            .drawing-section {
+                flex: none;
+                min-height: 300px;
+            }
+        }
+    </style>
+    <!-- 引入marked.js用于Markdown解析 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a href="#" class="back-btn" onclick="goBack()">← 返回</a>
+                <div class="logo">仿写训练</div>
+            </div>
+            <div class="session-info" id="sessionInfo">
+                Session ID: <span id="sessionId"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="content-section">
+            <div class="content-header">📖 原文内容</div>
+            <div class="original-text" id="originalText">
+                <div class="loading">正在加载仿写材料...</div>
+            </div>
+
+            <div class="segment-buttons" id="segmentButtons" style="display: none;">
+                <!-- 语段按钮将动态生成 -->
+            </div>
+
+            <div class="mode-buttons" id="modeButtons" style="display: none;">
+                <button class="mode-btn active" onclick="setMode('new')">新建仿写</button>
+                <button class="mode-btn" onclick="setMode('previous')">查看历史</button>
+            </div>
+
+            <button class="submit-btn" id="submitBtn" onclick="submitImitation()" disabled style="display: none;">
+                提交仿写作品
+            </button>
+        </div>
+
+        <div class="drawing-section">
+            <div class="drawing-header" id="drawingHeader">✍️ 仿写区域</div>
+            <div class="drawing-area" id="drawingArea">
+                <div class="loading">正在初始化...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="base_url.js"></script>
+    <script src="user-utils.js"></script>
+    <script src="lock-mask.js"></script>
+    <script src="drawing-canvas.js"></script>
+    <script>
+        let currentSessionId = '';
+        let drawingCanvas = null;
+        let imitationData = {};
+        let currentSegment = '1';
+        let currentMode = 'new'; // 'new' or 'previous'
+        let currentPreviousIndex = 0;
+        let isSubmitting = false;
+
+        // 获取URL参数
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // 返回主页
+        function goBack() {
+            if (currentSessionId) {
+                navigateToHomeWithSession(currentSessionId);
+            } else {
+                navigateToHome();
+            }
+        }
+
+        // 初始化页面
+        async function initializePage() {
+            currentSessionId = getUrlParameter('sessionid');
+
+            if (!currentSessionId) {
+                showError('缺少session ID参数');
+                return;
+            }
+
+            document.getElementById('sessionId').textContent = currentSessionId;
+
+            // 加载仿写材料
+            await loadImitationData();
+        }
+
+        // 加载仿写材料
+        async function loadImitationData() {
+            try {
+                const response = await fetch(`${BASE_URL}/getImitation?sessionid=${currentSessionId}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                imitationData = data.imitations || {};
+
+                if (Object.keys(imitationData).length === 0) {
+                    throw new Error('没有可用的仿写材料');
+                }
+
+                // 设置默认选中第一个语段
+                const segments = Object.keys(imitationData).sort((a, b) => parseInt(a) - parseInt(b));
+                currentSegment = segments[0];
+
+                // 生成语段按钮
+                generateSegmentButtons();
+
+                // 显示当前语段内容
+                displaySegmentContent();
+
+                // 显示控制按钮
+                document.getElementById('segmentButtons').style.display = 'flex';
+                document.getElementById('modeButtons').style.display = 'flex';
+                document.getElementById('submitBtn').style.display = 'block';
+
+                // 初始化绘图区
+                setMode('new');
+
+            } catch (error) {
+                console.error('加载仿写材料失败:', error);
+                showError('加载仿写材料失败: ' + error.message);
+
+                // 显示示例内容
+                showExampleContent();
+            }
+        }
+
+        // 生成语段按钮
+        function generateSegmentButtons() {
+            const container = document.getElementById('segmentButtons');
+            container.innerHTML = '';
+
+            const segments = Object.keys(imitationData).sort((a, b) => parseInt(a) - parseInt(b));
+
+            segments.forEach(segmentId => {
+                const button = document.createElement('button');
+                button.className = 'segment-btn';
+                button.textContent = `语段${segmentId}`;
+                button.onclick = () => selectSegment(segmentId);
+
+                if (segmentId === currentSegment) {
+                    button.classList.add('active');
+                }
+
+                container.appendChild(button);
+            });
+        }
+
+        // 选择语段
+        function selectSegment(segmentId) {
+            currentSegment = segmentId;
+            currentPreviousIndex = 0;
+
+            // 更新按钮状态
+            document.querySelectorAll('.segment-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 显示内容
+            displaySegmentContent();
+
+            // 根据当前模式更新显示
+            if (currentMode === 'new') {
+                setMode('new');
+            } else {
+                setMode('previous');
+            }
+        }
+
+        // 显示语段内容
+        function displaySegmentContent() {
+            const segment = imitationData[currentSegment];
+            if (!segment) return;
+
+            const htmlContent = marked.parse(segment.origin_md || '暂无内容');
+            document.getElementById('originalText').innerHTML = htmlContent;
+        }
+
+        // 设置模式
+        function setMode(mode) {
+            currentMode = mode;
+            currentPreviousIndex = 0;
+
+            // 更新模式按钮状态
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            if (mode === 'new') {
+                document.querySelector('.mode-btn[onclick="setMode(\'new\')"]').classList.add('active');
+                initializeNewImitation();
+            } else {
+                document.querySelector('.mode-btn[onclick="setMode(\'previous\')"]').classList.add('active');
+                showPreviousWork();
+            }
+        }
+
+        // 初始化新仿写
+        function initializeNewImitation() {
+            const drawingArea = document.getElementById('drawingArea');
+            const drawingHeader = document.getElementById('drawingHeader');
+
+            drawingHeader.textContent = '✍️ 仿写区域 - 新建仿写';
+            drawingArea.innerHTML = '';
+
+            try {
+                drawingCanvas = new DrawingCanvas('drawingArea', {
+                    backgroundColor: '#ffffff',
+                    penColor: '#000000',
+                    penSize: 2,
+                    eraserSize: 10,
+                    maxUndoSteps: 20
+                });
+
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('submitBtn').textContent = '提交仿写作品';
+
+            } catch (error) {
+                console.error('初始化绘图区失败:', error);
+                showError('初始化绘图区失败: ' + error.message);
+            }
+        }
+
+        // 显示历史作品
+        function showPreviousWork() {
+            const segment = imitationData[currentSegment];
+            const prevWorks = segment?.prev_works || [];
+
+            const drawingArea = document.getElementById('drawingArea');
+            const drawingHeader = document.getElementById('drawingHeader');
+
+            drawingCanvas = null; // 清除绘图canvas
+            document.getElementById('submitBtn').disabled = true;
+
+            if (prevWorks.length === 0) {
+                drawingHeader.textContent = '📝 历史作品 - 暂无历史作品';
+                drawingArea.innerHTML = '<div class="no-previous-work">该语段暂无历史仿写作品</div>';
+                return;
+            }
+
+            // 创建历史作品查看器
+            drawingHeader.innerHTML = `
+                📝 历史作品 - 第${currentPreviousIndex + 1}份 / 共${prevWorks.length}份
+                <div style="margin-top: 10px;">
+                    <button onclick="previousWork()" ${currentPreviousIndex <= 0 ? 'disabled' : ''} style="margin-right: 10px; padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer;">上一份</button>
+                    <button onclick="nextWork()" ${currentPreviousIndex >= prevWorks.length - 1 ? 'disabled' : ''} style="padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer;">下一份</button>
+                </div>
+            `;
+
+            // 显示当前历史作品
+            const currentWork = prevWorks[currentPreviousIndex];
+            const htmlContent = marked.parse(currentWork || '暂无内容');
+            drawingArea.innerHTML = `<div style="padding: 20px; background: #f9f9f9; border-radius: 8px; height: 100%; overflow-y: auto; line-height: 1.6;">${htmlContent}</div>`;
+        }
+
+        // 上一份作品
+        function previousWork() {
+            if (currentPreviousIndex > 0) {
+                currentPreviousIndex--;
+                showPreviousWork();
+            }
+        }
+
+        // 下一份作品
+        function nextWork() {
+            const segment = imitationData[currentSegment];
+            const prevWorks = segment?.prev_works || [];
+
+            if (currentPreviousIndex < prevWorks.length - 1) {
+                currentPreviousIndex++;
+                showPreviousWork();
+            }
+        }
+
+        // 提交仿写作品
+        async function submitImitation() {
+            if (isSubmitting || currentMode !== 'new') return;
+
+            if (!drawingCanvas) {
+                showError('请先创建仿写内容');
+                return;
+            }
+
+            if (!confirm('确定要提交当前的仿写作品吗？')) {
+                return;
+            }
+
+            isSubmitting = true;
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '提交中...';
+            submitBtn.disabled = true;
+
+            try {
+                drawingCanvas.toBlob(async (blob) => {
+                    try {
+                        const formData = new FormData();
+                        formData.append('image', blob, 'imitation.png');
+
+                        const response = await fetch(`${BASE_URL}/submitImitation?sessionid=${currentSessionId}&imitid=${currentSegment}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            showSuccess('仿写作品提交成功！');
+
+                            // 重新加载数据以获取最新的历史作品
+                            setTimeout(async () => {
+                                await loadImitationData();
+                            }, 1000);
+                        } else {
+                            throw new Error(result.message || '提交失败');
+                        }
+
+                    } catch (error) {
+                        console.error('提交失败:', error);
+                        showError('提交失败: ' + error.message);
+                    } finally {
+                        isSubmitting = false;
+                        submitBtn.textContent = originalText;
+                        if (currentMode === 'new') {
+                            submitBtn.disabled = false;
+                        }
+                    }
+                }, 'image/png', 0.8);
+
+            } catch (error) {
+                console.error('生成图片失败:', error);
+                showError('生成图片失败: ' + error.message);
+                isSubmitting = false;
+                submitBtn.textContent = originalText;
+                if (currentMode === 'new') {
+                    submitBtn.disabled = false;
+                }
+            }
+        }
+
+        // 显示示例内容
+        function showExampleContent() {
+            imitationData = {
+                '1': {
+                    origin_md: `# 示例原文片段1
+
+春天来了，万物复苏。柳树抽出了新芽，嫩绿嫩绿的，像小姑娘的眉毛。桃花开了，粉红粉红的，像小朋友的脸蛋。
+
+**仿写要求：**
+- 模仿描写春天景物的方法
+- 运用比喻修辞手法
+- 注意颜色词的使用`,
+                    prev_works: []
+                },
+                '2': {
+                    origin_md: `# 示例原文片段2
+
+夏天的雨来得突然，来得猛烈。刚才还是晴空万里，转眼间乌云密布，雷声隆隆。豆大的雨点砸在地面上，溅起朵朵水花。
+
+**仿写要求：**
+- 学习描写天气变化的技巧  
+- 注意动词的准确运用
+- 体会拟人和比喻的表达效果`,
+                    prev_works: []
+                }
+            };
+
+            currentSegment = '1';
+            generateSegmentButtons();
+            displaySegmentContent();
+
+            document.getElementById('segmentButtons').style.display = 'flex';
+            document.getElementById('modeButtons').style.display = 'flex';
+            document.getElementById('submitBtn').style.display = 'block';
+
+            setMode('new');
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+
+            const originalText = document.getElementById('originalText');
+            originalText.insertBefore(errorDiv, originalText.firstChild);
+
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 5000);
+        }
+
+        // 显示成功信息
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+
+            const originalText = document.getElementById('originalText');
+            originalText.insertBefore(successDiv, originalText.firstChild);
+
+            setTimeout(() => {
+                if (successDiv.parentNode) {
+                    successDiv.parentNode.removeChild(successDiv);
+                }
+            }, 5000);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+
+        // 防止意外离开页面
+        window.addEventListener('beforeunload', (e) => {
+            if (drawingCanvas && currentMode === 'new' && !isSubmitting) {
+                e.preventDefault();
+                e.returnValue = '您的仿写内容可能会丢失，确定要离开吗？';
+            }
+        });
+    </script>
+</body>
+
+</html>

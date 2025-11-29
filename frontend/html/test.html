@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试页面</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .test-section {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #5a6fd8;
+        }
+        
+        .result {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>作文训练系统 - API测试</h1>
+    
+    <div class="test-section">
+        <h3>1. 获取所有题目</h3>
+        <button onclick="testGetAllQuestions()">测试获取题目列表</button>
+        <div id="questionsResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. 创建Session</h3>
+        <input type="text" id="usernameInput" placeholder="用户名" value="testuser">
+        <input type="text" id="questionIdInput" placeholder="题目ID" value="question_01">
+        <input type="text" id="sessionNameInput" placeholder="Session名称（可选）">
+        <button onclick="testCreateSession()">创建Session</button>
+        <div id="createResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. 获取用户Sessions</h3>
+        <input type="text" id="getUsernameInput" placeholder="用户名" value="testuser">
+        <button onclick="testGetUserSessions()">获取用户Sessions</button>
+        <div id="userSessionsResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>4. 用户管理测试</h3>
+        <button onclick="testUserManagement()">测试用户名管理</button>
+        <div id="userManagementResult" class="result"></div>
+    </div>
+
+    <script src="base_url.js"></script>
+    <script src="user-utils.js"></script>
+    <script src="lock-mask.js"></script>
+    <script>
+        async function testGetAllQuestions() {
+            const resultDiv = document.getElementById('questionsResult');
+            resultDiv.textContent = '请求中...';
+            
+            return withLock(async () => {
+                try {
+                    const response = await fetch(`${BASE_URL}/getAllQuestions`);
+                    const data = await response.json();
+                    resultDiv.textContent = JSON.stringify(data, null, 2);
+                } catch (error) {
+                    resultDiv.textContent = `错误: ${error.message}`;
+                    throw error;
+                }
+            });
+        }
+        
+        async function testCreateSession() {
+            const resultDiv = document.getElementById('createResult');
+            const username = document.getElementById('usernameInput').value;
+            const questionId = document.getElementById('questionIdInput').value;
+            const sessionName = document.getElementById('sessionNameInput').value;
+            
+            if (!username || !questionId) {
+                resultDiv.textContent = '请填写用户名和题目ID';
+                return;
+            }
+            
+            resultDiv.textContent = '创建中...';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/createSession`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        question_id: questionId,
+                        session_name: sessionName || questionId
+                    })
+                });
+                
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        async function testGetUserSessions() {
+            const resultDiv = document.getElementById('userSessionsResult');
+            const username = document.getElementById('getUsernameInput').value;
+            
+            if (!username) {
+                resultDiv.textContent = '请填写用户名';
+                return;
+            }
+            
+            resultDiv.textContent = '获取中...';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/getUserSessions?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `错误: ${error.message}`;
+            }
+        }
+        
+        function testUserManagement() {
+            const resultDiv = document.getElementById('userManagementResult');
+            
+            // 测试用户名管理
+            const originalUser = getCurrentUser();
+            resultDiv.textContent = `当前用户: ${originalUser}\n`;
+            
+            // 设置新用户名
+            const testUser = 'test_user_' + Date.now();
+            setCurrentUser(testUser);
+            const newUser = getCurrentUser();
+            resultDiv.textContent += `设置新用户: ${newUser}\n`;
+            
+            // 清除用户名
+            clearCurrentUser();
+            const clearedUser = getCurrentUser(); // 这会提示输入
+            resultDiv.textContent += `清除后重新获取: ${clearedUser}\n`;
+        }
+    </script>
+</body>
+</html>

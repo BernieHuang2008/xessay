@@ -1,0 +1,39 @@
+# 忽略配置文件中的敏感信息
+backend/config.py
+
+# Python缓存文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# 虚拟环境
+venv/
+env/
+ENV/
+
+# IDE配置文件
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 日志文件
+*.log
+
+# 数据文件（如果包含敏感信息）
+backend/data/sessions/*.json
+backend/data/users/*.json
+
+# 临时文件
+*.tmp
+*.temp
+
+# 操作系统生成的文件
+.DS_Store
+Thumbs.db
+
+# Node.js依赖（如果有前端构建）
+node_modules/
+npm-debug.log*

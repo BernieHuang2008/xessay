@@ -1,0 +1,66 @@
+根据用户的书写内容和生成的提纲，对提纲进行评价和打分。
+
+评价要求：
+1. 提纲结构的完整性和逻辑性
+2. 内容与主题的切合程度
+3. 语言表达的准确性和流畅度
+4. 创意和思考深度
+
+评分标准（总分60分）：
+- 结构完整性（15分）：提纲层次清楚，结构合理
+- 主题切合度（15分）：内容紧扣主题，观点明确
+- 语言表达（15分）：用词准确，表达清晰
+- 辩证思维/创意思维（15分）：有独特见解，思考有深度，提纲体现辩证性
+除了评分标准，还需要针对用户的提纲，结合“标准审题思路”，进行具体的批注式的评价。在comment_on_outline字段中。
+
+请输出以下格式的JSON：
+{
+    "overall_score": 45,
+    "detailed_scores": {
+        "structure": 10,
+        "theme_relevance": 10,
+        "language": 10,
+        "creativity": 15
+    },
+    "strengths": [
+        "优点1",
+        "优点2"
+    ],
+    "improvements": [
+        "改进建议1",
+        "改进建议2"
+    ],
+    "comments": "总体评价内容",
+    "comment_on_outline": {
+        ... user's **original** other parts of the outline-json ...
+        "parts": [
+            {
+                ... user's **original** outline-json ...
+                "comments": [
+                    "对该部分的具体评价内容。",
+                    "以“✓ ”开头的，表示做得好的点",
+                    "以“✗ ”开头的，表示做得不好的点（可以参考“标准审题思路”提出修改意见）",
+                ]
+            }
+        ]
+    }
+}
+
+用户原始内容：
+```markdown
+$USER_CONTENT
+```
+
+生成的提纲：
+```json
+$GENERATED_OUTLINE
+```
+
+标准审题思路：
+```markdown
+$STD_THINKING
+```
+
+请根据以上内容进行评价，仅输出一个json。
+
+```json

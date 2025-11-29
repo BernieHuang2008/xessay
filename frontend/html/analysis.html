@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>审题训练 - 作文训练系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .session-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            height: calc(100vh - 80px);
+            flex-direction: column;
+        }
+
+        .topic-section {
+            flex: 1;
+            /* background: rgba(255, 255, 255, 0.95); */
+            /* border-radius: 12px; */
+            padding: 20px;
+            /* box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); */
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .topic-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .topic-content {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            color: #444;
+        }
+
+        .submit-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .submit-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .drawing-section {
+            flex: 1;
+            /* background: rgba(255, 255, 255, 0.95); */
+            /* border-radius: 12px; */
+            padding: 20px;
+            /* box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); */
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .drawing-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .drawing-area {
+            flex: 1;
+            position: relative;
+            min-height: 400px;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        .error {
+            background: #ffe6e6;
+            color: #d63031;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #fab1a0;
+        }
+
+        .success {
+            background: #e6ffe6;
+            color: #00b894;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 1px solid #a8e6cf;
+        }
+
+        /* Markdown样式 */
+        .topic-content h1, .topic-content h2, .topic-content h3 {
+            margin: 15px 0 10px 0;
+            color: #333;
+        }
+
+        .topic-content h1 { font-size: 24px; }
+        .topic-content h2 { font-size: 20px; }
+        .topic-content h3 { font-size: 18px; }
+
+        .topic-content p {
+            margin: 10px 0;
+            text-align: justify;
+        }
+
+        .topic-content ul, .topic-content ol {
+            margin: 10px 0 10px 20px;
+        }
+
+        .topic-content li {
+            margin: 5px 0;
+        }
+
+        .topic-content blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin: 15px 0;
+            font-style: italic;
+            color: #555;
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .topic-content code {
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .topic-section, .drawing-section {
+                flex: none;
+                min-height: 300px;
+            }
+        }
+    </style>
+    <!-- 引入marked.js用于Markdown解析 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a href="#" class="back-btn" onclick="goBack()">← 返回</a>
+                <div class="logo">审题训练</div>
+            </div>
+            <div class="session-info" id="sessionInfo">
+                Session ID: <span id="sessionId"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="topic-section">
+            <div class="topic-header">📝 作文题目</div>
+            <div class="topic-content" id="topicContent">
+                <div class="loading">正在加载题目...</div>
+            </div>
+            <button class="submit-btn" id="submitBtn" onclick="submitOutline()" disabled>
+                提交审题分析
+            </button>
+        </div>
+
+        <div class="drawing-section">
+            <div class="drawing-header">✍️ 审题分析区</div>
+            <div class="drawing-area" id="drawingArea">
+                <div class="loading">正在初始化绘图区...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="base_url.js"></script>
+    <script src="user-utils.js"></script>
+    <script src="lock-mask.js"></script>
+    <script src="drawing-canvas.js"></script>
+    <script>
+        let currentSessionId = '';
+        let drawingCanvas = null;
+        let isSubmitting = false;
+
+        // 获取URL参数
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // 返回主页
+        function goBack() {
+            if (currentSessionId) {
+                navigateToHomeWithSession(currentSessionId);
+            } else {
+                navigateToHome();
+            }
+        }
+
+        // 初始化页面
+        async function initializePage() {
+            currentSessionId = getUrlParameter('sessionid');
+            
+            if (!currentSessionId) {
+                showError('缺少session ID参数');
+                return;
+            }
+
+            document.getElementById('sessionId').textContent = currentSessionId;
+            
+            // 加载题目
+            await loadEssayTopic();
+            
+            // 初始化绘图区
+            initializeDrawing();
+        }
+
+        // 加载作文题目
+        async function loadEssayTopic() {
+            try {
+                const response = await fetch(`${BASE_URL}/getEssayTopic?sessionid=${currentSessionId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // 使用marked解析Markdown
+                const htmlContent = marked.parse(data.topic_md || '# 暂无题目\n\n请联系管理员添加题目内容。');
+                document.getElementById('topicContent').innerHTML = htmlContent;
+                
+            } catch (error) {
+                console.error('加载题目失败:', error);
+                showError('加载题目失败: ' + error.message);
+                
+                // 显示示例题目
+                const exampleTopic = `
+# 示例作文题目
+
+## 题目要求
+
+请以"成长路上的那盏灯"为题，写一篇不少于600字的记叙文。
+
+## 写作要求
+
+1. 题目中的"灯"可以是具体的灯，也可以是比喻义的"灯"
+2. 要有具体的事例和真实的感受
+3. 语言要生动，描写要细致
+4. 结构要完整，层次要清楚
+
+## 写作提示
+
+- 回想成长过程中，谁或什么给了你指引和帮助？
+- 这个"灯"在什么情况下出现？产生了什么作用？
+- 通过这件事，你有什么感悟和成长？
+                `;
+                
+                document.getElementById('topicContent').innerHTML = marked.parse(exampleTopic);
+            }
+        }
+
+        // 初始化绘图区
+        function initializeDrawing() {
+            try {
+                // 清空loading内容
+                document.getElementById('drawingArea').innerHTML = '';
+                
+                // 创建绘图canvas
+                drawingCanvas = new DrawingCanvas('drawingArea', {
+                    backgroundColor: '#ffffff',
+                    penColor: '#000000',
+                    penSize: 2,
+                    eraserSize: 10,
+                    maxUndoSteps: 20
+                });
+                
+                // 启用提交按钮
+                document.getElementById('submitBtn').disabled = false;
+                
+            } catch (error) {
+                console.error('初始化绘图区失败:', error);
+                showError('初始化绘图区失败: ' + error.message);
+            }
+        }
+
+        // 提交审题分析
+        async function submitOutline() {
+            if (isSubmitting || isSystemLocked()) return;
+            
+            if (!drawingCanvas) {
+                showError('绘图区未正确初始化');
+                return;
+            }
+
+            if (!confirm('确定要提交当前的审题分析吗？')) {
+                return;
+            }
+
+            return withLock(async () => {
+                isSubmitting = true;
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '提交中...';
+            submitBtn.disabled = true;
+
+            try {
+                // 将canvas转换为blob
+                drawingCanvas.toBlob(async (blob) => {
+                    try {
+                        const formData = new FormData();
+                        formData.append('image', blob, 'outline.png');
+
+                        const response = await fetch(`${BASE_URL}/submitEssayOutline?sessionid=${currentSessionId}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            showSuccess('审题分析提交成功！正在跳转到提纲结果页面...');
+                            setTimeout(() => {
+                                window.location.href = `outline_result.html?sessionid=${currentSessionId}`;
+                            }, 2000);
+                        } else {
+                            throw new Error(result.message || '提交失败');
+                        }
+                        
+                    } catch (error) {
+                        console.error('提交失败:', error);
+                        showError('提交失败: ' + error.message);
+                    } finally {
+                        isSubmitting = false;
+                        submitBtn.textContent = originalText;
+                        submitBtn.disabled = false;
+                    }
+                }, 'image/png', 0.8);
+
+            } catch (error) {
+                console.error('生成图片失败:', error);
+                showError('生成图片失败: ' + error.message);
+                isSubmitting = false;
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+                throw error;
+            }
+            });
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            
+            const topicContent = document.getElementById('topicContent');
+            topicContent.insertBefore(errorDiv, topicContent.firstChild);
+            
+            setTimeout(() => {
+                if (errorDiv.parentNode) {
+                    errorDiv.parentNode.removeChild(errorDiv);
+                }
+            }, 5000);
+        }
+
+        // 显示成功信息
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            
+            const topicContent = document.getElementById('topicContent');
+            topicContent.insertBefore(successDiv, topicContent.firstChild);
+            
+            setTimeout(() => {
+                if (successDiv.parentNode) {
+                    successDiv.parentNode.removeChild(successDiv);
+                }
+            }, 5000);
+
+            isSubmitting = true;
+            window.location.href = `outline_result.html?sessionid=${currentSessionId}`;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+
+        // 防止意外离开页面
+        window.addEventListener('beforeunload', (e) => {
+            if (drawingCanvas && !isSubmitting) {
+                e.preventDefault();
+                e.returnValue = '您的绘图内容可能会丢失，确定要离开吗？';
+            }
+        });
+    </script>
+</body>
+</html>

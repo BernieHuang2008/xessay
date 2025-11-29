@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提纲结果 - 作文训练系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #f5f7fa;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: #5a67d8;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .session-info {
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .main-content {
+            flex: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .topic-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .topic-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 16px;
+        }
+
+        .topic-content {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            line-height: 1.8;
+            color: #4a5568;
+            white-space: pre-wrap;
+        }
+
+        .outline-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .outline-btn {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            flex: 1;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .outline-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .outline-btn:hover {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+
+        .outline-btn.active:hover {
+            background: #5a67d8;
+        }
+
+        .outline-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .outline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .outline-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .outline-type {
+            background: #e6fffa;
+            color: #065f46;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .outline-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #edf2f7;
+        }
+
+        .parts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .part-item {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            border-left: 4px solid #667eea;
+        }
+
+        .part-header {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .part-content {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .part-examples, .part-quotes {
+            font-size: 14px;
+            color: #718096;
+            margin-top: 8px;
+        }
+
+        .examples-list, .quotes-list, .comments-list {
+            list-style: none;
+            padding-left: 16px;
+        }
+
+        .examples-list li, .quotes-list li, .comments-list li {
+            margin: 4px 0;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .examples-list li::before {
+            content: "📚";
+            position: absolute;
+            left: -20px;
+        }
+
+        .quotes-list li::before {
+            content: "💬";
+            position: absolute;
+            left: -20px;
+        }
+
+        .comments-list li::before {
+            content: "🤖";
+            position: absolute;
+            left: -20px;
+        }
+
+        .ai-judgement {
+            margin-top: 24px;
+            background: #fff5f5;
+            border: 1px solid #feb2b2;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .judgement-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .ai-icon {
+            width: 24px;
+            height: 24px;
+            background: #e53e3e;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .score-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .score-label {
+            font-size: 12px;
+            color: #718096;
+            margin-bottom: 4px;
+        }
+
+        .score-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .overall-score {
+            background: #667eea;
+            color: white;
+        }
+
+        .feedback-section {
+            margin: 16px 0;
+        }
+
+        .feedback-title {
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .feedback-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .feedback-list li {
+            background: white;
+            margin: 4px 0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border-left: 3px solid #48bb78;
+            color: #4a5568;
+        }
+
+        .improvements .feedback-list li {
+            border-left-color: #ed8936;
+        }
+
+        .comments-section {
+            background: white;
+            padding: 16px;
+            border-radius: 6px;
+            margin-top: 16px;
+        }
+
+        .comments-text {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .error {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 16px 0;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .outline-buttons {
+                flex-direction: column;
+            }
+            
+            .outline-btn {
+                min-width: auto;
+            }
+            
+            .scores-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <button class="back-btn" onclick="goBack()">← 返回</button>
+                <h1 class="page-title">提纲结果</h1>
+            </div>
+            <div class="session-info">会话ID: <span id="sessionId">-</span></div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <!-- 题目展示区域 -->
+        <div class="topic-section">
+            <div class="topic-title">作文题目</div>
+            <div class="topic-content" id="topicContent">正在加载...</div>
+        </div>
+
+        <!-- 提纲切换按钮 -->
+        <div class="outline-buttons" id="outlineButtons">
+            <div class="loading">正在加载提纲选项...</div>
+        </div>
+
+        <!-- 提纲内容展示区域 -->
+        <div class="outline-content" id="outlineContent">
+            <div class="loading">请选择要查看的提纲</div>
+        </div>
+    </div>
+
+    <script src="base_url.js"></script>
+    <script src="user-utils.js"></script>
+    <script src="lock-mask.js"></script>
+    <script>
+        let currentSessionId = '';
+        let userOutlines = [];
+        let standardOutlines = [];
+        let currentOutlineIndex = -1;
+        let currentOutlineType = 'user'; // 'user' or 'standard'
+
+        // 获取URL参数
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // 返回主页
+        function goBack() {
+            if (currentSessionId) {
+                navigateToHomeWithSession(currentSessionId);
+            } else {
+                navigateToHome();
+            }
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.getElementById('outlineContent').innerHTML = '';
+            document.getElementById('outlineContent').appendChild(errorDiv);
+        }
+
+        // 初始化页面
+        async function initializePage() {
+            currentSessionId = getUrlParameter('sessionid');
+            
+            if (!currentSessionId) {
+                showError('缺少session ID参数');
+                return;
+            }
+
+            document.getElementById('sessionId').textContent = currentSessionId;
+            
+            // 并行加载数据
+            await Promise.all([
+                loadEssayTopic(),
+                loadUserOutlines(),
+                loadStandardOutlines()
+            ]);
+            
+            // 渲染按钮
+            renderOutlineButtons();
+            
+            // 默认选择第一个用户提纲
+            if (userOutlines.length > 0) {
+                selectOutline('user', 0);
+            }
+        }
+
+        // 加载作文题目
+        async function loadEssayTopic() {
+            try {
+                const response = await fetch(`${BASE_URL}/getEssayTopic?sessionid=${currentSessionId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                document.getElementById('topicContent').textContent = data.topic_md || '题目加载失败';
+                
+            } catch (error) {
+                console.error('加载题目失败:', error);
+                document.getElementById('topicContent').textContent = '题目加载失败: ' + error.message;
+            }
+        }
+
+        // 加载用户提纲
+        async function loadUserOutlines() {
+            try {
+                const response = await fetch(`${BASE_URL}/getSessionDetail?sessionid=${currentSessionId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                userOutlines = data.essay_outlines || [];
+                
+            } catch (error) {
+                console.error('加载用户提纲失败:', error);
+                userOutlines = [];
+            }
+        }
+
+        // 加载标准提纲
+        async function loadStandardOutlines() {
+            try {
+                const response = await fetch(`${BASE_URL}/getStandardOutlines?sessionid=${currentSessionId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                standardOutlines = data.outlines || [];
+                
+            } catch (error) {
+                console.error('加载标准提纲失败:', error);
+                standardOutlines = [];
+            }
+        }
+
+        // 渲染按钮
+        function renderOutlineButtons() {
+            const buttonsContainer = document.getElementById('outlineButtons');
+            buttonsContainer.innerHTML = '';
+
+            // 用户提纲按钮
+            userOutlines.forEach((outline, index) => {
+                const button = document.createElement('div');
+                button.className = 'outline-btn';
+                button.textContent = `我的提纲 ${index + 1}`;
+                button.onclick = () => selectOutline('user', index);
+                buttonsContainer.appendChild(button);
+            });
+
+            // 标准提纲按钮
+            standardOutlines.forEach((outline, index) => {
+                const button = document.createElement('div');
+                button.className = 'outline-btn';
+                button.textContent = `标准提纲 ${index + 1}`;
+                button.onclick = () => selectOutline('standard', index);
+                buttonsContainer.appendChild(button);
+            });
+
+            if (userOutlines.length === 0 && standardOutlines.length === 0) {
+                buttonsContainer.innerHTML = '<div class="loading">暂无提纲数据</div>';
+            }
+        }
+
+        // 选择提纲
+        function selectOutline(type, index) {
+            currentOutlineType = type;
+            currentOutlineIndex = index;
+            
+            // 更新按钮状态
+            const buttons = document.querySelectorAll('.outline-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            let buttonIndex = index;
+            if (type === 'standard') {
+                buttonIndex = userOutlines.length + index;
+            }
+            
+            if (buttons[buttonIndex]) {
+                buttons[buttonIndex].classList.add('active');
+            }
+            
+            // 渲染提纲内容
+            if (type === 'user' && userOutlines[index]) {
+                renderUserOutline(userOutlines[index]);
+            } else if (type === 'standard' && standardOutlines[index]) {
+                renderStandardOutline(standardOutlines[index]);
+            }
+        }
+
+        // 渲染用户提纲
+        function renderUserOutline(outline) {
+            console.log(outline)
+            const container = document.getElementById('outlineContent');
+            const structured = outline.ai_judgement.comment_on_outline;
+            
+            let html = `
+                <div class="outline-header">
+                    <div class="outline-title">${structured.title || '无标题'}</div>
+                    <div class="outline-type">用户提纲</div>
+                </div>
+                
+                <div class="outline-section">
+                    <div class="section-title">作文主旨</div>
+                    <div class="part-content">${structured.subject || '无主旨说明'}</div>
+                </div>
+                
+                <div class="outline-section">
+                    <div class="section-title">提纲结构</div>
+                    <div class="parts-container">
+            `;
+            
+            if (structured.parts && structured.parts.length > 0) {
+                structured.parts.forEach(part => {
+                    html += `
+                        <div class="part-item">
+                            <div class="part-header">${part.part_title || '未命名部分'}</div>
+                            <div class="part-content">${part.content || '无内容'}</div>
+                    `;
+                    
+                    if (part.examples && part.examples.length > 0) {
+                        html += `
+                            <div class="part-examples">
+                                <strong>示例:</strong>
+                                <ul class="examples-list">
+                                    ${part.examples.map(ex => `<li>${ex}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    }
+                    
+                    if (part.quotes && part.quotes.length > 0) {
+                        html += `
+                            <div class="part-quotes">
+                                <strong>引用:</strong>
+                                <ul class="quotes-list">
+                                    ${part.quotes.map(quote => `<li>${quote}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    }
+                    
+                    if (part.example_content && part.example_content !== '空') {
+                        html += `
+                            <div class="part-content">
+                                <strong>详细内容:</strong><br>
+                                ${part.example_content}
+                            </div>
+                        `;
+                    }
+
+                    if(part.comments && part.comments.length > 0) {
+                        html += `
+                            <div class="part-comments">
+                                <strong>🤖评语:</strong>
+                                <ul class="comments-list">
+                                    ${part.comments.map(comment => `<li>${comment}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    }
+                    
+                    html += `</div>`;
+                });
+            } else {
+                html += '<div class="part-item">暂无结构化内容</div>';
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            // 添加AI评判结果
+            if (outline.ai_judgement) {
+                html += renderAIJudgement(outline.ai_judgement);
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // 渲染标准提纲
+        function renderStandardOutline(outline) {
+            const container = document.getElementById('outlineContent');
+            
+            let html = `
+                <div class="outline-header">
+                    <div class="outline-title">${outline.title || '无标题'}</div>
+                    <div class="outline-type">标准提纲</div>
+                </div>
+                
+                <div class="outline-section">
+                    <div class="section-title">作文主旨</div>
+                    <div class="part-content">${outline.subject || '无主旨说明'}</div>
+                </div>
+                
+                <div class="outline-section">
+                    <div class="section-title">提纲结构</div>
+                    <div class="parts-container">
+            `;
+            
+            if (outline.parts && outline.parts.length > 0) {
+                outline.parts.forEach(part => {
+                    html += `
+                        <div class="part-item">
+                            <div class="part-header">${part.part_title || '未命名部分'}</div>
+                            <div class="part-content">${part.content || '无内容'}</div>
+                    `;
+                    
+                    if (part.examples && part.examples.length > 0) {
+                        html += `
+                            <div class="part-examples">
+                                <strong>示例:</strong>
+                                <ul class="examples-list">
+                                    ${part.examples.map(ex => `<li>${ex}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    }
+                    
+                    if (part.quotes && part.quotes.length > 0) {
+                        html += `
+                            <div class="part-quotes">
+                                <strong>引用:</strong>
+                                <ul class="quotes-list">
+                                    ${part.quotes.map(quote => `<li>${quote}</li>`).join('')}
+                                </ul>
+                            </div>
+                        `;
+                    }
+                    
+                    if (part.example_content && part.example_content !== '空') {
+                        html += `
+                            <div class="part-content">
+                                <strong>详细内容:</strong><br>
+                                ${part.example_content}
+                            </div>
+                        `;
+                    }
+                    
+                    html += `</div>`;
+                });
+            } else {
+                html += '<div class="part-item">暂无结构化内容</div>';
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // 渲染AI评判结果
+        function renderAIJudgement(judgement) {
+            let html = `
+                <div class="ai-judgement">
+                    <div class="judgement-header">
+                        <div class="ai-icon">AI</div>
+                        <strong>AI 评判结果</strong>
+                    </div>
+                    
+                    <div class="scores-grid">
+                        <div class="score-item overall-score">
+                            <div class="score-label">总分</div>
+                            <div class="score-value">${judgement.overall_score || 0}</div>
+                        </div>
+            `;
+            
+            if (judgement.detailed_scores) {
+                const scoreLabels = {
+                    structure: '结构',
+                    theme_relevance: '主题',
+                    language: '语言', 
+                    creativity: '创意'
+                };
+                
+                Object.entries(judgement.detailed_scores).forEach(([key, score]) => {
+                    html += `
+                        <div class="score-item">
+                            <div class="score-label">${scoreLabels[key] || key}</div>
+                            <div class="score-value">${score}</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `</div>`;
+            
+            if (judgement.strengths && judgement.strengths.length > 0) {
+                html += `
+                    <div class="feedback-section strengths">
+                        <div class="feedback-title">优点</div>
+                        <ul class="feedback-list">
+                            ${judgement.strengths.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (judgement.improvements && judgement.improvements.length > 0) {
+                html += `
+                    <div class="feedback-section improvements">
+                        <div class="feedback-title">改进建议</div>
+                        <ul class="feedback-list">
+                            ${judgement.improvements.map(item => `<li>${item}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            if (judgement.comments) {
+                html += `
+                    <div class="comments-section">
+                        <div class="feedback-title">总体评价</div>
+                        <div class="comments-text">${judgement.comments}</div>
+                    </div>
+                `;
+            }
+            
+            html += `</div>`;
+            return html;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>
