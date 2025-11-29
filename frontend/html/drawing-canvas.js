@@ -391,8 +391,8 @@ class DrawingCanvas {
         const currentScroll = scrollableElement === document.documentElement ? 
             window.pageYOffset || document.documentElement.scrollTop : 
             scrollableElement.scrollTop;
-        
-        if (currentScroll < maxScroll) {
+
+        if (currentScroll < maxScroll-10) {
             // Scroll down by 50% of viewport height
             const scrollAmount = Math.min(maxScroll - currentScroll, window.innerHeight * 0.5);
             if (scrollableElement === document.documentElement) {
