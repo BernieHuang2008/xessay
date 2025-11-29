@@ -335,6 +335,42 @@
             line-height: 1.6;
         }
 
+        .thinking-content {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            line-height: 1.8;
+            color: #2d3748;
+        }
+
+        .thinking-content p {
+            margin-bottom: 16px;
+        }
+
+        .thinking-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .thinking-content strong {
+            color: #1a202c;
+            font-weight: 600;
+        }
+
+        .thinking-content em {
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .thinking-content code {
+            background: #edf2f7;
+            color: #2d3748;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
@@ -401,6 +437,7 @@
         let currentSessionId = '';
         let userOutlines = [];
         let standardOutlines = [];
+        let thinkData = '';
         let currentOutlineIndex = -1;
         let currentOutlineType = 'user'; // 'user' or 'standard'
 
@@ -504,7 +541,7 @@
                 
                 const data = await response.json();
                 standardOutlines = data.outlines || [];
-                
+                thinkData = data.think || '';
             } catch (error) {
                 console.error('加载标准提纲失败:', error);
                 standardOutlines = [];
@@ -534,6 +571,15 @@
                 buttonsContainer.appendChild(button);
             });
 
+            // 审题思路按钮
+            if (standardOutlines.length > 0 && thinkData) {
+                const thinkButton = document.createElement('div');
+                thinkButton.className = 'outline-btn';
+                thinkButton.textContent = '审题思路';
+                thinkButton.onclick = () => selectOutline('think', 0);
+                buttonsContainer.appendChild(thinkButton);
+            }
+
             if (userOutlines.length === 0 && standardOutlines.length === 0) {
                 buttonsContainer.innerHTML = '<div class="loading">暂无提纲数据</div>';
             }
@@ -551,6 +597,8 @@
             let buttonIndex = index;
             if (type === 'standard') {
                 buttonIndex = userOutlines.length + index;
+            } else if (type === 'think') {
+                buttonIndex = userOutlines.length + standardOutlines.length;
             }
             
             if (buttons[buttonIndex]) {
@@ -562,6 +610,8 @@
                 renderUserOutline(userOutlines[index]);
             } else if (type === 'standard' && standardOutlines[index]) {
                 renderStandardOutline(standardOutlines[index]);
+            } else if (type === 'think' && standardOutlines.length > 0) {
+                renderThinkingProcess(thinkData);
             }
         }
 
@@ -719,6 +769,46 @@
                 });
             } else {
                 html += '<div class="part-item">暂无结构化内容</div>';
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // 渲染审题思路
+        function renderThinkingProcess(thinkData) {
+            const container = document.getElementById('outlineContent');
+            
+            let html = `
+                <div class="outline-header">
+                    <div class="outline-title">审题思路分析</div>
+                    <div class="outline-type">思维导图</div>
+                </div>
+                
+                <div class="outline-section">
+                    <div class="section-title">审题分析过程</div>
+                    <div class="thinking-content">
+            `;
+            
+            if (thinkData) {
+                // 将think字段的内容按行分割并处理markdown格式
+                const thinkContent = thinkData.replace(/\\n/g, '\n');
+                
+                // 简单的markdown渲染
+                let processedContent = thinkContent
+                    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')  // 粗体
+                    .replace(/\*(.+?)\*/g, '<em>$1</em>')  // 斜体
+                    .replace(/`(.+?)`/g, '<code>$1</code>')  // 代码
+                    .replace(/\n\n/g, '</p><p>')  // 段落
+                    .replace(/\n/g, '<br>');  // 换行
+                
+                html += `<p>${processedContent}</p>`;
+            } else {
+                html += '<p>暂无审题思路分析</p>';
             }
             
             html += `

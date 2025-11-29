@@ -928,6 +928,7 @@ def get_standard_outlines():
         return jsonify({
             'status': 'success',
             'outlines': outlines,
+            'think': question_data.get('think', ''),
             'question_text': question_data.get('question', '')
         })
         
