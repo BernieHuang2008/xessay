@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作文训练系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .session-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .training-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .training-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .training-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .training-card .icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .training-card h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .training-card p {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: white;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">作文训练系统</div>
+            <div class="session-info" id="sessionInfo">
+                Session ID: <span id="sessionId"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="training-grid" id="trainingGrid">
+            <div class="training-card" onclick="navigateToTraining('analysis')">
+                <div class="icon">📝</div>
+                <h3>审题训练</h3>
+                <p>分析作文题目，训练审题能力，提高写作准确性</p>
+            </div>
+            
+            <div class="training-card" onclick="navigateToTraining('imitation')">
+                <div class="icon">✍️</div>
+                <h3>仿写训练</h3>
+                <p>模仿优秀范文，学习写作技巧和表达方式</p>
+            </div>
+
+            <div class="training-card" onclick="navigateToTraining('practice')">
+                <div class="icon">🎯</div>
+                <h3>综合练习</h3>
+                <p>综合运用所学技巧，进行完整的写作练习</p>
+            </div>
+
+            <div class="training-card" onclick="navigateToTraining('review')">
+                <div class="icon">📊</div>
+                <h3>学习回顾</h3>
+                <p>回顾学习成果，查看历史作业和进步情况</p>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            正在加载session信息...
+        </div>
+    </div>
+
+    <script src="base_url.js"></script>
+    <script>
+        let currentSessionId = '';
+
+        // 获取URL参数
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // 初始化页面
+        async function initializePage() {
+            currentSessionId = getUrlParameter('sessionid');
+            
+            if (!currentSessionId) {
+                alert('缺少session ID参数');
+                return;
+            }
+
+            document.getElementById('sessionId').textContent = currentSessionId;
+            
+            // 获取session详情
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('trainingGrid').style.display = 'none';
+                
+                const response = await fetch(`${BASE_URL}/getSessionDetail?sessionid=${currentSessionId}`);
+                const sessionData = await response.json();
+                
+                // 更新session信息显示
+                document.getElementById('sessionInfo').innerHTML = `
+                    Session ID: ${sessionData.session_id} | 用户: ${sessionData.user_name || '未知'} | 状态: ${sessionData.status || 'active'}
+                `;
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('trainingGrid').style.display = 'grid';
+            } catch (error) {
+                console.error('获取session信息失败:', error);
+                document.getElementById('loading').textContent = '加载session信息失败，但仍可使用训练功能';
+                document.getElementById('trainingGrid').style.display = 'grid';
+            }
+        }
+
+        // 导航到训练页面
+        function navigateToTraining(type) {
+            const pages = {
+                'analysis': 'analysis.html',
+                'imitation': 'imitation.html',
+                'practice': 'practice.html',
+                'review': 'review.html'
+            };
+
+            const page = pages[type];
+            if (page) {
+                window.location.href = `${page}?sessionid=${currentSessionId}`;
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>

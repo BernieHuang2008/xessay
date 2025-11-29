@@ -1,0 +1,20 @@
+{
+  "session_id": "xxx",
+  "user_name": "用户_xxx",
+  "created_at": "2025-11-28T22:13:59.938294Z",
+  "status": "active",
+  "essay_outlines": [
+    {
+      "ocr_filename": "outline_xxx_20251128_221357.md",
+      "ocr_filepath": "data/ocr_results\\outline_xxx_20251128_221357.md",
+      "text_content": "## 我完全认同",
+      "submitted_at": "2025-11-28T22:13:59.938294",
+      "original_filename": "outline.png"
+    }
+  ],
+  "imitation_works": {},
+  "metadata": {
+    "last_updated": "2025-11-28T22:13:59.938294Z",
+    "total_submissions": 1
+  }
+}

@@ -1,0 +1,70 @@
+{
+    "qbank": [
+        {
+            "id": 0,
+            "name": "Sample Question",
+            "src": "2000年深圳一模",
+            "file": "2000_shenzhen_sim1.json"
+        },
+        {
+            "id": 1,
+            "name": "Question 01",
+            "src": "sucai.txt",
+            "file": "question_01.json"
+        },
+        {
+            "id": 2,
+            "name": "Question 02",
+            "src": "sucai.txt",
+            "file": "question_02.json"
+        },
+        {
+            "id": 3,
+            "name": "Question 03",
+            "src": "sucai.txt",
+            "file": "question_03.json"
+        },
+        {
+            "id": 4,
+            "name": "Question 04",
+            "src": "sucai.txt",
+            "file": "question_04.json"
+        },
+        {
+            "id": 5,
+            "name": "Question 05",
+            "src": "sucai.txt",
+            "file": "question_05.json"
+        },
+        {
+            "id": 6,
+            "name": "Question 06",
+            "src": "sucai.txt",
+            "file": "question_06.json"
+        },
+        {
+            "id": 7,
+            "name": "Question 07",
+            "src": "sucai.txt",
+            "file": "question_07.json"
+        },
+        {
+            "id": 8,
+            "name": "Question 08",
+            "src": "sucai.txt",
+            "file": "question_08.json"
+        },
+        {
+            "id": 9,
+            "name": "Question 09",
+            "src": "sucai.txt",
+            "file": "question_09.json"
+        },
+        {
+            "id": 10,
+            "name": "Question 10",
+            "src": "sucai.txt",
+            "file": "question_10.json"
+        }
+    ]
+}

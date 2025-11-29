@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>综合练习 - 作文训练系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .back-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .session-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .coming-soon {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 60px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+        }
+
+        .coming-soon .icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+        }
+
+        .coming-soon h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .coming-soon p {
+            font-size: 18px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .feature-list {
+            text-align: left;
+            margin: 20px 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            color: #555;
+            border-bottom: 1px solid #eee;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a href="#" class="back-btn" onclick="goBack()">← 返回</a>
+                <div class="logo">综合练习</div>
+            </div>
+            <div class="session-info" id="sessionInfo">
+                Session ID: <span id="sessionId"></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="coming-soon">
+            <div class="icon">🎯</div>
+            <h2>综合练习模块</h2>
+            <p>该模块正在开发中，将为您提供完整的作文综合练习体验。</p>
+            
+            <div class="feature-list">
+                <h3 style="margin-bottom: 15px; color: #333;">即将推出的功能：</h3>
+                <ul>
+                    <li>📝 完整作文写作练习</li>
+                    <li>📊 智能评分与建议</li>
+                    <li>📈 写作能力评估</li>
+                    <li>📚 个性化练习推荐</li>
+                    <li>🏆 学习成就系统</li>
+                </ul>
+            </div>
+            
+            <p style="margin-top: 30px; font-size: 16px; color: #888;">
+                敬请期待更多精彩功能！
+            </p>
+        </div>
+    </div>
+
+    <script src="base_url.js"></script>
+    <script>
+        let currentSessionId = '';
+
+        // 获取URL参数
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            const regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            const results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        // 返回主页
+        function goBack() {
+            window.location.href = `index.html?sessionid=${currentSessionId}`;
+        }
+
+        // 初始化页面
+        function initializePage() {
+            currentSessionId = getUrlParameter('sessionid');
+            
+            if (!currentSessionId) {
+                alert('缺少session ID参数');
+                return;
+            }
+
+            document.getElementById('sessionId').textContent = currentSessionId;
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>
