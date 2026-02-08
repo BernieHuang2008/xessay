@@ -326,7 +326,7 @@ class DrawingCanvas {
 
     setTool(toolName) {
         this.currentTool = toolName;
-        this.canvas.style.cursor = toolName === 'pen' ? 'crosshair' : 'grab';, 'download', 'upload'
+        this.canvas.style.cursor = toolName === 'pen' ? 'crosshair' : 'grab';
     }
 
     updateToolButtons() {
