@@ -65,6 +65,24 @@
             "name": "Question 10",
             "src": "sucai.txt",
             "file": "question_10.json"
+        },
+        {
+            "id": 11,
+            "name": "2026 寒假作业(一)",
+            "src": "sucai.txt",
+            "file": "question_2026winter1.json"
+        },
+        {
+            "id": 12,
+            "name": "2026 寒假作业(二)",
+            "src": "sucai.txt",
+            "file": "question_2026winter2.json"
+        },
+        {
+            "id": 13,
+            "name": "2026 寒假作业(三)",
+            "src": "sucai.txt",
+            "file": "question_2026winter3.json"
         }
     ]
 }
