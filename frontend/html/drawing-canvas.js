@@ -123,7 +123,9 @@ class DrawingCanvas {
             { name: 'undo', icon: '↶', title: '撤销' },
             { name: 'pageUp', icon: '⬆️', title: '向上翻页' },
             { name: 'pageDown', icon: '⬇️', title: '向下翻页' },
-            { name: 'clear', icon: '🗑️', title: '清空' }
+            { name: 'clear', icon: '🗑️', title: '清空' },
+            { name: 'download', icon: '💾', title: '下载图片' },
+            { name: 'import', icon: '🖼️', title: '导入图片' }
         ];
 
         tools.forEach(tool => {
@@ -207,8 +209,16 @@ class DrawingCanvas {
         // 保存当前绘制内容
         const imageData = this.ctx ? this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height) : null;
         
-        this.canvas.width = rect.width;
-        this.canvas.height = rect.height;
+        // Support High DPI
+        const dpr = window.devicePixelRatio || 1;
+        
+        this.canvas.width = rect.width * dpr;
+        this.canvas.height = rect.height * dpr;
+        
+        this.canvas.style.width = rect.width + 'px';
+        this.canvas.style.height = rect.height + 'px';
+        
+        this.ctx.scale(dpr, dpr);
         
         // 恢复绘制内容
         if (imageData) {
@@ -303,6 +313,12 @@ class DrawingCanvas {
             case 'clear':
                 this.clear();
                 break;
+            case 'download':
+                this.downloadImage();
+                break;
+            case 'import':
+                this.importImage();
+                break;
         }
         
         this.updateToolButtons();
@@ -310,13 +326,13 @@ class DrawingCanvas {
 
     setTool(toolName) {
         this.currentTool = toolName;
-        this.canvas.style.cursor = toolName === 'pen' ? 'crosshair' : 'grab';
+        this.canvas.style.cursor = toolName === 'pen' ? 'crosshair' : 'grab';, 'download', 'upload'
     }
 
     updateToolButtons() {
         const buttons = this.container.querySelectorAll('.tool-btn');
         buttons.forEach((btn, index) => {
-            const tools = ['pen', 'eraser', 'undo', 'pageUp', 'pageDown', 'clear'];
+            const tools = ['pen', 'eraser', 'undo', 'pageUp', 'pageDown', 'clear', 'download', 'import'];
             const isActive = tools[index] === this.currentTool;
             btn.style.background = isActive ? '#667eea' : '#f5f5f5';
             btn.style.color = isActive ? 'white' : '#333';
@@ -479,6 +495,73 @@ class DrawingCanvas {
         
         // 从临时画布导出
         return tempCanvas.toDataURL(type, quality);
+    }
+
+    downloadImage() {
+        this.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `drawing_${new Date().toISOString().replace(/[:.]/g, '-')}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+    }
+
+    importImage() {
+        // 创建隐藏的文件输入框
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.style.display = 'none';
+        
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    // 确认是否清空画布
+                    if (confirm('导入图片将清空当前画布内容，是否继续？')) {
+                        // 清空画布
+                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        this.ctx.fillStyle = this.options.backgroundColor;
+                        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                        
+                        // 计算缩放比例，保持图片比例且适应画布
+                        const canvasRatio = this.canvas.width / this.canvas.height;
+                        const imgRatio = img.width / img.height;
+                        
+                        let drawWidth, drawHeight, offsetX, offsetY;
+                        
+                        if (canvasRatio > imgRatio) {
+                            drawHeight = this.canvas.height;
+                            drawWidth = drawHeight * imgRatio;
+                            offsetX = (this.canvas.width - drawWidth) / 2;
+                            offsetY = 0;
+                        } else {
+                            drawWidth = this.canvas.width;
+                            drawHeight = drawWidth / imgRatio;
+                            offsetX = 0;
+                            offsetY = (this.canvas.height - drawHeight) / 2;
+                        }
+                        
+                        this.ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+                        this.saveState();
+                    }
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+        
+        document.body.appendChild(input);
+        input.click();
+        document.body.removeChild(input);
     }
 
     // 设置画布尺寸

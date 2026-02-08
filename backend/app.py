@@ -936,6 +936,44 @@ def get_standard_outlines():
         logger.error(f"获取标准提纲出错: {str(e)}")
         return jsonify({'error': f'服务器错误: {str(e)}'}), 500
 
+@app.route('/uploadImage', methods=['POST'])
+def upload_image():
+    """上传图片"""
+    if 'image' not in request.files:
+        return jsonify({"error": "No image file provided"}), 400
+    
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+    
+    if file :
+        try:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # 简单处理文件名，保留扩展名或默认为png
+            ext = os.path.splitext(file.filename)[1]
+            if not ext:
+                ext = '.png'
+                
+            filename = f"upload_{timestamp}_{str(uuid.uuid4())[:8]}{ext}"
+            uploads_dir = os.path.join(DATA_FOLDER, 'uploads')
+            
+            if not os.path.exists(uploads_dir):
+                os.makedirs(uploads_dir)
+                
+            file_path = os.path.join(uploads_dir, filename)
+            file.save(file_path)
+            
+            return jsonify({
+                "success": True,
+                "message": "Image uploaded successfully",
+                "filename": filename
+            })
+        except Exception as e:
+            logger.error(f"Error saving uploaded image: {str(e)}")
+            return jsonify({"error": str(e)}), 500
+    
+    return jsonify({"error": "Invalid file type"}), 400
+
 # 错误处理
 @app.errorhandler(404)
 def not_found(error):
