@@ -617,9 +617,10 @@
 
         // 渲染用户提纲
         function renderUserOutline(outline) {
-            console.log(outline)
+            console.log(outline);
             const container = document.getElementById('outlineContent');
-            const structured = outline.ai_judgement.comment_on_outline;
+            const structured = outline.structured_content;
+            const ai_judgement = outline.ai_judgement.comment_on_outline;
             
             let html = `
                 <div class="outline-header">
@@ -638,57 +639,57 @@
             `;
             
             if (structured.parts && structured.parts.length > 0) {
-                structured.parts.forEach(part => {
+                for (var i=0; i<structured.parts.length; i++) {
                     html += `
                         <div class="part-item">
-                            <div class="part-header">${part.part_title || '未命名部分'}</div>
-                            <div class="part-content">${part.content || '无内容'}</div>
+                            <div class="part-header">${structured.parts[i].part_title || '未命名部分'}</div>
+                            <div class="part-content">${structured.parts[i].content || '无内容'}</div>
                     `;
                     
-                    if (part.examples && part.examples.length > 0) {
+                    if (structured.parts[i].examples && structured.parts[i].examples.length > 0) {
                         html += `
                             <div class="part-examples">
-                                <strong>示例:</strong>
+                                <strong>例子:</strong>
                                 <ul class="examples-list">
-                                    ${part.examples.map(ex => `<li>${ex}</li>`).join('')}
+                                    ${structured.parts[i].examples.map(ex => `<li>${ex}</li>`).join('')}
                                 </ul>
                             </div>
                         `;
                     }
                     
-                    if (part.quotes && part.quotes.length > 0) {
+                    if (structured.parts[i].quotes && structured.parts[i].quotes.length > 0) {
                         html += `
                             <div class="part-quotes">
                                 <strong>引用:</strong>
                                 <ul class="quotes-list">
-                                    ${part.quotes.map(quote => `<li>${quote}</li>`).join('')}
+                                    ${structured.parts[i].quotes.map(quote => `<li>${quote}</li>`).join('')}
                                 </ul>
                             </div>
                         `;
                     }
                     
-                    if (part.example_content && part.example_content !== '空') {
+                    if (structured.parts[i].example_content && structured.parts[i].example_content !== '空') {
                         html += `
                             <div class="part-content">
                                 <strong>详细内容:</strong><br>
-                                ${part.example_content}
+                                ${structured.parts[i].example_content}
                             </div>
                         `;
                     }
 
-                    if(part.comments && part.comments.length > 0) {
+                    if(ai_judgement.parts[i].comments && ai_judgement.parts[i].comments.length > 0) {
                         html += `
                             <div class="part-comments">
                                 <strong>🤖评语:</strong>
                                 <ul class="comments-list">
-                                    ${part.comments.map(comment => `<li>${comment}</li>`).join('')}
+                                    ${ai_judgement.parts[i].comments.map(comment => `<li>${comment}</li>`).join('')}
                                 </ul>
                             </div>
                         `;
                     }
                     
                     html += `</div>`;
-                });
+                };
             } else {
                 html += '<div class="part-item">暂无结构化内容</div>';
             }
