@@ -129,6 +129,9 @@ def generate_user_outline(user_content):
     
     result = call_llm_api(messages)
     
+    with open("logs_outline_generation.txt", "w", encoding="utf-8") as log_file:
+        log_file.write(f"prompt:\n{prompt}\n\nresponse:\n{result['content']}\n")
+
     if result["success"]:
         # 提取JSON内容
         json_content = extract_json_from_response(result["content"])
@@ -156,6 +159,9 @@ def judge_outline(user_content, generated_outline):
     
     result = call_llm_api(messages)
     
+    with open("logs_outline_judgment.txt", "w", encoding="utf-8") as log_file:
+        log_file.write(f"prompt:\n{prompt}\n\nresponse:\n{result['content']}\n")
+
     if result["success"]:
         # 提取JSON内容
         json_content = extract_json_from_response(result["content"])
