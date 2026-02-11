@@ -52,7 +52,7 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def ask_llm(prompt: str) -> str:
+def ask_llm(messages: list) -> str:
     import os
     # Use Pollinations AI API for LLM interaction
     url = LLM_API_URL
@@ -63,9 +63,7 @@ def ask_llm(prompt: str) -> str:
     }
     payload = {
         "model": "openai",
-        "messages": [
-            {"role": "user", "content": prompt}
-        ]
+        "messages": messages
     }
     response = requests.post(url, json=payload, headers=headers, verify=False)
     return response
