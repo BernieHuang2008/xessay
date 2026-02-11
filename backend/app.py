@@ -18,12 +18,14 @@ if os.path.exists("config.json"):
         CONFIG = json.load(f)
     PADDLE_OCR_API_URL = CONFIG.get("PADDLE_OCR_API_URL", "")
     PADDLE_OCR_TOKEN = CONFIG.get("PADDLE_OCR_TOKEN", "")
+    LLM_API_URL = CONFIG.get("LLM_API_URL", "")
+    LLM_API_KEY = CONFIG.get("LLM_API_KEY", "")
 else:
     print("警告: config.json 文件不存在，请复制 config.template.json 为 config.json 并填写正确的配置")
     # 使用默认配置
     PADDLE_OCR_API_URL = "https://c8s16af3r0gd36g6.aistudio-app.com/layout-parsing"
     PADDLE_OCR_TOKEN = "your_paddle_ocr_token_here"
-    LLM_API_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
+    LLM_API_URL = "https://gen.pollinations.ai/v1/chat/completions"
     LLM_API_KEY = "your_llm_api_key_here"
     LLM_MODEL = "qwen-max"
 
@@ -50,11 +52,34 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def ask_llm(prompt: str) -> str:
+    import os
+    # Use Pollinations AI API for LLM interaction
+    url = LLM_API_URL
+    api_key = LLM_API_KEY
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "openai",
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+    try:
+        response = requests.post(url, json=payload, headers=headers, verify=False)
+        response.raise_for_status()
+        return response.json().get("choices")[0].get("message").get("content")
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Failed to call Pollinations AI: {e}")
+        return ""
+
 def call_llm_api(messages, max_tokens=2048, temperature=0.7):
     """调用LLM API进行内容生成"""
     try:        
         # response = requests.post(LLM_API_URL, json=payload, headers=headers, timeout=60, verify=False)
-        response = requests.get(f"https://text.pollinations.ai/{messages}", timeout=60, verify=False)
+        response = ask_llm(messages)
         
         if response.status_code == 200:
             # result = response.json()
@@ -993,27 +1018,121 @@ def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
-    print("="*50)
-    print("Essay Training Backend Server")
-    print("="*50)
-    print("Available endpoints:")
-    print("  GET  /                                  - API信息")
-    print("  GET  /getSessionDetail?sessionid=xxx    - 获取session详情")  
-    print("  GET  /getEssayTopic?sessionid=xxx       - 获取作文题目")
-    print("  POST /submitEssayOutline?sessionid=xxx  - 提交审题分析(含AI处理)")
-    print("  GET  /getImitation?sessionid=xxx        - 获取仿写材料")
-    print("  POST /submitImitation?sessionid=xxx&imitid=xxx - 提交仿写作品")
-    print("  GET  /getOCRResult?sessionid=xxx&type=essay - 获取OCR结果")
-    print("  GET  /getStandardOutlines?sessionid=xxx - 获取标准提纲")
-    print("\nTesting endpoints:")
-    print("  POST /test/ai                           - 测试AI处理功能")
-    print("\nManagement endpoints:")
-    print("  GET  /admin/sessions                    - 查看所有sessions")
-    print("  GET  /admin/session/<sessionid>         - 查看指定session详情")
-    print("  POST /admin/reset/<sessionid>           - 重置指定session")
-    print("="*50)
-    print("Starting server on http://localhost:5005")
-    print("Press Ctrl+C to stop")
-    print("="*50)
+    # print("="*50)
+    # print("Essay Training Backend Server")
+    # print("="*50)
+    # print("Available endpoints:")
+    # print("  GET  /                                  - API信息")
+    # print("  GET  /getSessionDetail?sessionid=xxx    - 获取session详情")  
+    # print("  GET  /getEssayTopic?sessionid=xxx       - 获取作文题目")
+    # print("  POST /submitEssayOutline?sessionid=xxx  - 提交审题分析(含AI处理)")
+    # print("  GET  /getImitation?sessionid=xxx        - 获取仿写材料")
+    # print("  POST /submitImitation?sessionid=xxx&imitid=xxx - 提交仿写作品")
+    # print("  GET  /getOCRResult?sessionid=xxx&type=essay - 获取OCR结果")
+    # print("  GET  /getStandardOutlines?sessionid=xxx - 获取标准提纲")
+    # print("\nTesting endpoints:")
+    # print("  POST /test/ai                           - 测试AI处理功能")
+    # print("\nManagement endpoints:")
+    # print("  GET  /admin/sessions                    - 查看所有sessions")
+    # print("  GET  /admin/session/<sessionid>         - 查看指定session详情")
+    # print("  POST /admin/reset/<sessionid>           - 重置指定session")
+    # print("="*50)
+    # print("Starting server on http://localhost:5005")
+    # print("Press Ctrl+C to stop")
+    # print("="*50)
     
-    app.run(host='0.0.0.0', port=5005, debug=True, )
+    # app.run(host='0.0.0.0', port=5005, debug=True, )
+    resp = call_llm_api("""
+                 0.426840340371508根据用户的书写内容，生成一份提纲。
+
+要求：
+1. 必须使用用户的书写内容，只能修改错别字，不能凭空添加信息和语句。
+2. 必须切合用户的意思，不能主管臆造，也不能补充内容、名言、例子等。
+3. 如果用户的书写内容中没有可以补充提纲的某些格式/字段，请留空而非补充。提纲中的内容**只能是用户书写的内容**
+4. 提纲的参考格式如下：
+{
+    "title": "用户书写的提纲标题（作文标题）",
+    "subject": "用户书写的作文主旨，若没有就空置（空字符串）",
+    "parts": [
+        {
+            "part_title": "用户书写的第一个部分的标题",
+            "content": "用户书写的该part的主要内容（提纲性的），若没有就空置（空字符串）",
+            "examples": [
+                "用户书写的例子1，若没有就空置（空列表）",
+                "用户书写的例子2，若没有就空置"
+            ],
+            "quotes": [
+                "用户书写的名言1，若没有就空置（空列表）",
+                "用户书写的名言2，若没有就空置"
+            ],
+            "example_content": "固定为空置"
+        },
+    ]
+}
+
+请根据以上要求，生成提纲。仅输出一个json。
+
+用户的书写内容：
+```markdown
+## 分析：
+
+#1：十字路口：有很多可供选择的选项，人生并非只有一种可能性。
+
+井工：踏足无人之地；开拓。
+
+不循旧路：不被已有趣的成功限制住
+
+井了：不为外撼：跟随内心，不随大流
+
+主旨：追随心中梦想，不为外摭
+
+标题：追随梦想，不为外戍，方行稳致远。
+
+## 分段：
+
+①引材料。(1)人生不只有一种可能(材)
+
+(1) 我们应开拓无人之地(材料)
+
+(i)开拓时，不以物移，不为外感，要坚持初心，追随梦想。
+
+②人生不只一种可能，我们应勇于探索。
+
+世界上没有绝对的对错，自然也没有唯一的道路。
+
+eg. 生物靠随机进化探索出最合适的无数条各有优劣的道路。
+
+· 满意隆平不循着“权威”的道路，敢于开拓，最终找到了杂交水稻这一新路。
+
+· 姜子牙尝试了无数不同的道路，最终才找到最适合自己的。
+
+·李白因出身不能考科举，但仍凭借才华成为诗仙，达到了无数士人都达不到的地位。
+
+③不为外感，坚持目标。
+
+一旦探索出了适合自己的道路，就要坚定地走下去。如果途中要抵制各种诱惑、阻碍，方能改远
+
+eg. 苏武被困北海，正是由于他怀着对汉朝坚定的执念，在恶劣的环境下坚守了19年，造就了传奇的一生。（不撼于匈奴的财富、地位）
+
+·孟母三迁，就定为了不让儿子被外物干扰
+
+·抗战时期，无数民族英雄宁可牺牲生命也坚定地保家卫国，而意志不坚定的则为了一点点小利成为“汉奸”，被永远钉在历史的耻辱柱上。
+
+## ④然(审)证段)然而执着并不等于固执。
+
+不以物移、不为外感没错，但如果变成听不进别人的建议，固执地做事，那就走偏了。不为外感是指我们应形成独立的判断力，能自主判断“外物”对不对、有没有道理。有道理我们就吸收，与自己的观点融合，形成更完善的见解。对于没道理的才要“不为外感”，坚持内心。
+
+## ⑤总结：
+
+人生并非只有一条路，也并非只消能走“路”
+
+前方无路，我们就去踏出一条路。
+
+而在走路的过程中，不为小利所撼，始终坚持初心，自主判断。方能行稳致远。
+```
+                        
+请根据用户的书写内容，生成符合要求的提纲格式。仅输出一个json。
+                 """)
+    
+
+    print(resp)
