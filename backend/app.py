@@ -67,13 +67,8 @@ def ask_llm(prompt: str) -> str:
             {"role": "user", "content": prompt}
         ]
     }
-    try:
-        response = requests.post(url, json=payload, headers=headers, verify=False)
-        response.raise_for_status()
-        return response.json().get("choices")[0].get("message").get("content")
-    except requests.exceptions.RequestException as e:
-        logging.error(f"Failed to call Pollinations AI: {e}")
-        return ""
+    response = requests.post(url, json=payload, headers=headers, verify=False)
+    return response
 
 def call_llm_api(messages, max_tokens=2048, temperature=0.7):
     """调用LLM API进行内容生成"""
@@ -82,11 +77,11 @@ def call_llm_api(messages, max_tokens=2048, temperature=0.7):
         response = ask_llm(messages)
         
         if response.status_code == 200:
-            # result = response.json()
+            result = response.json()
             return {
                 "success": True,
-                # "content": result["choices"][0]["message"]["content"]
-                "content": response.text
+                "content": result["choices"][0]["message"]["content"]
+                # "content": response.text
             }
         else:
             logger.error(f"LLM API request failed with status {response.status_code}: {response.text}")
