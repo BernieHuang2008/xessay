@@ -1,3 +1,4 @@
+import random
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
@@ -145,7 +146,8 @@ def judge_outline(user_content, generated_outline):
         return {"success": False, "error": "Failed to load outline judgment prompt"}
     
     # 替换模板中的内容
-    prompt = prompt_template.replace('$USER_CONTENT', user_content)
+    prompt = str(random.random()) + prompt_template  # 防止缓存
+    prompt = prompt.replace('$USER_CONTENT', user_content)
     prompt = prompt.replace('$GENERATED_OUTLINE', json.dumps(generated_outline, ensure_ascii=False, indent=2))
     
     messages = [

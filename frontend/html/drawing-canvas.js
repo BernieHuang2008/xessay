@@ -525,34 +525,11 @@ class DrawingCanvas {
             reader.onload = (event) => {
                 const img = new Image();
                 img.onload = () => {
-                    // 确认是否清空画布
-                    if (confirm('导入图片将清空当前画布内容，是否继续？')) {
-                        // 清空画布
-                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                        this.ctx.fillStyle = this.options.backgroundColor;
-                        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-                        
-                        // 计算缩放比例，保持图片比例且适应画布
-                        const canvasRatio = this.canvas.width / this.canvas.height;
-                        const imgRatio = img.width / img.height;
-                        
-                        let drawWidth, drawHeight, offsetX, offsetY;
-                        
-                        if (canvasRatio > imgRatio) {
-                            drawHeight = this.canvas.height;
-                            drawWidth = drawHeight * imgRatio;
-                            offsetX = (this.canvas.width - drawWidth) / 2;
-                            offsetY = 0;
-                        } else {
-                            drawWidth = this.canvas.width;
-                            drawHeight = drawWidth / imgRatio;
-                            offsetX = 0;
-                            offsetY = (this.canvas.height - drawHeight) / 2;
-                        }
-                        
-                        this.ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-                        this.saveState();
-                    }
+                    // 调整画布尺寸以适应图片
+                    this.setSize(img.width, img.height);
+                    // 绘制图片到画布上
+                    this.ctx.drawImage(img, 0, 0);
+                    this.saveState();
                 };
                 img.src = event.target.result;
             };
