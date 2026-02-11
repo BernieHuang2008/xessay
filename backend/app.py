@@ -161,16 +161,22 @@ def generate_user_outline(user_content):
     else:
         return result
 
-def judge_outline(user_content, generated_outline):
+def judge_outline(user_content, generated_outline, sessionid):
     """使用AI评价提纲"""
     prompt_template = load_prompt_template('ai_judge_outline.txt')
     if not prompt_template:
         return {"success": False, "error": "Failed to load outline judgment prompt"}
     
+    # get std thinking for judgement
+    session = load_session_data(sessionid)
+    question_id = session.get('question', 'default')
+    std_thinking = get_essay_topics(question_id).get("think", "")
+    
     # 替换模板中的内容
     prompt = str(random.random()) + prompt_template  # 防止缓存
     prompt = prompt.replace('$USER_CONTENT', user_content)
     prompt = prompt.replace('$GENERATED_OUTLINE', json.dumps(generated_outline, ensure_ascii=False, indent=2))
+    prompt = prompt.replace('$STD_THINKING', std_thinking)
     
     messages = [
         {"role": "user", "content": prompt}
@@ -652,7 +658,7 @@ def get_essay_topic():
     session = load_session_data(sessionid)
     question_id = session.get('question', 'default')
     
-    # 获取默认题目（可以扩展为根据session返回不同题目）
+    # 获取默认题目（可以扩展为根据session返回不同题目）]
     topic_md = get_essay_topics(question_id)["question"] or '# 暂无题目\n\n请联系管理员添加题目内容。'
     
     logger.info(f"Retrieved essay topic for session: {sessionid}")
@@ -694,7 +700,7 @@ def submit_essay_outline():
             if outline_result["success"]:
                 # 使用AI评价提纲
                 logger.info(f"Judging outline using AI for session {sessionid}")
-                judgement_result = judge_outline(ocr_result["text_content"], outline_result["outline"])
+                judgement_result = judge_outline(ocr_result["text_content"], outline_result["outline"], sessionid)
                 
                 # 准备保存到session的数据
                 outline_data = {
@@ -857,45 +863,6 @@ def submit_imitation():
     
     return jsonify({"error": "Invalid file type"}), 400
 
-
-
-# 测试接口
-@app.route('/test/ai', methods=['POST'])
-def test_ai_processing():
-    """测试AI处理功能"""
-    try:
-        data = request.get_json()
-        if not data or 'text_content' not in data:
-            return jsonify({"error": "Missing text_content in request body"}), 400
-        
-        text_content = data['text_content']
-        
-        # 测试生成提纲
-        outline_result = generate_user_outline(text_content)
-        if not outline_result["success"]:
-            return jsonify({
-                "success": False,
-                "error": f"Outline generation failed: {outline_result['error']}"
-            }), 500
-        
-        # 测试评价提纲
-        judgement_result = judge_outline(text_content, outline_result["outline"])
-        if not judgement_result["success"]:
-            return jsonify({
-                "success": False,
-                "error": f"Outline judgement failed: {judgement_result['error']}"
-            }), 500
-        
-        return jsonify({
-            "success": True,
-            "text_content": text_content,
-            "structured_content": outline_result["outline"],
-            "ai_judgement": judgement_result["judgement"]
-        })
-        
-    except Exception as e:
-        logger.error(f"Error in AI processing test: {str(e)}")
-        return jsonify({"error": f"Test failed: {str(e)}"}), 500
 
 # 管理接口（可选）
 @app.route('/admin/sessions')
