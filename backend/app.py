@@ -121,7 +121,8 @@ def generate_user_outline(user_content):
         return {"success": False, "error": "Failed to load outline generation prompt"}
     
     # 替换模板中的用户内容
-    prompt = prompt_template.replace('$USER_CONTENT', user_content)
+    prompt = str(random.random()) + prompt_template  # 防止缓存
+    prompt = prompt.replace('$USER_CONTENT', user_content)
     
     messages = [
         {"role": "user", "content": prompt}
