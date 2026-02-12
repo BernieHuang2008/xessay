@@ -223,7 +223,7 @@ def process_image_with_ocr(file_path):
         }
         
         # 发送OCR请求
-        response = requests.post(PADDLE_OCR_API_URL, json=payload, headers=headers, timeout=30, verify=False)
+        response = requests.post(PADDLE_OCR_API_URL, json=payload, headers=headers, timeout=300, verify=False)
         
         if response.status_code == 200:
             result = response.json()["result"]
