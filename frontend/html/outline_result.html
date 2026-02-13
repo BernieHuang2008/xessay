@@ -1,10 +1,32 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>提纲结果 - 作文训练系统</title>
     <style>
+        cmt-add {
+            color: #c00606;
+        }
+
+        cmt-del {
+            color: black;
+            text-decoration: line-through #c00606;
+        }
+
+        cmt-comm {
+            color: #3182ce;
+            font-style: italic;
+        }
+
+        cmt-add,
+        cmt-del,
+        cmt-comm {
+            margin-left: 1ch;
+            margin-right: 1ch;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -201,18 +223,23 @@
             margin-bottom: 8px;
         }
 
-        .part-examples, .part-quotes {
+        .part-examples,
+        .part-quotes {
             font-size: 14px;
             color: #718096;
             margin-top: 8px;
         }
 
-        .examples-list, .quotes-list, .comments-list {
+        .examples-list,
+        .quotes-list,
+        .comments-list {
             list-style: none;
             padding-left: 16px;
         }
 
-        .examples-list li, .quotes-list li, .comments-list li {
+        .examples-list li,
+        .quotes-list li,
+        .comments-list li {
             margin: 4px 0;
             position: relative;
             line-height: 1.5;
@@ -390,17 +417,18 @@
             .outline-buttons {
                 flex-direction: column;
             }
-            
+
             .outline-btn {
                 min-width: auto;
             }
-            
+
             .scores-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-container">
@@ -470,24 +498,24 @@
         // 初始化页面
         async function initializePage() {
             currentSessionId = getUrlParameter('sessionid');
-            
+
             if (!currentSessionId) {
                 showError('缺少session ID参数');
                 return;
             }
 
             document.getElementById('sessionId').textContent = currentSessionId;
-            
+
             // 并行加载数据
             await Promise.all([
                 loadEssayTopic(),
                 loadUserOutlines(),
                 loadStandardOutlines()
             ]);
-            
+
             // 渲染按钮
             renderOutlineButtons();
-            
+
             // 默认选择第一个用户提纲
             if (userOutlines.length > 0) {
                 selectOutline('user', 0);
@@ -498,14 +526,14 @@
         async function loadEssayTopic() {
             try {
                 const response = await fetch(`${BASE_URL}/getEssayTopic?sessionid=${currentSessionId}`);
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
                 document.getElementById('topicContent').textContent = data.topic_md || '题目加载失败';
-                
+
             } catch (error) {
                 console.error('加载题目失败:', error);
                 document.getElementById('topicContent').textContent = '题目加载失败: ' + error.message;
@@ -516,14 +544,14 @@
         async function loadUserOutlines() {
             try {
                 const response = await fetch(`${BASE_URL}/getSessionDetail?sessionid=${currentSessionId}`);
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
                 userOutlines = data.essay_outlines || [];
-                
+
             } catch (error) {
                 console.error('加载用户提纲失败:', error);
                 userOutlines = [];
@@ -534,11 +562,11 @@
         async function loadStandardOutlines() {
             try {
                 const response = await fetch(`${BASE_URL}/getStandardOutlines?sessionid=${currentSessionId}`);
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                
+
                 const data = await response.json();
                 standardOutlines = data.outlines || [];
                 thinkData = data.think || '';
@@ -589,132 +617,42 @@
         function selectOutline(type, index) {
             currentOutlineType = type;
             currentOutlineIndex = index;
-            
+
             // 更新按钮状态
             const buttons = document.querySelectorAll('.outline-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
-            
+
             let buttonIndex = index;
             if (type === 'standard') {
                 buttonIndex = userOutlines.length + index;
             } else if (type === 'think') {
                 buttonIndex = userOutlines.length + standardOutlines.length;
             }
-            
+
             if (buttons[buttonIndex]) {
                 buttons[buttonIndex].classList.add('active');
             }
-            
+
             // 渲染提纲内容
             if (type === 'user' && userOutlines[index]) {
-                renderUserOutline(userOutlines[index]);
+                renderStandardOutline(userOutlines[index].cmp, { outlineType: 'user' });
             } else if (type === 'standard' && standardOutlines[index]) {
-                renderStandardOutline(standardOutlines[index]);
+                renderStandardOutline(standardOutlines[index], { outlineType: 'standard' });
             } else if (type === 'think' && standardOutlines.length > 0) {
                 renderThinkingProcess(thinkData);
             }
         }
 
-        // 渲染用户提纲
-        function renderUserOutline(outline) {
-            console.log(outline);
-            const container = document.getElementById('outlineContent');
-            const structured = outline.structured_content;
-            const ai_judgement = outline.ai_judgement.comment_on_outline;
-            
-            let html = `
-                <div class="outline-header">
-                    <div class="outline-title">${structured.title || '无标题'}</div>
-                    <div class="outline-type">用户提纲</div>
-                </div>
-                
-                <div class="outline-section">
-                    <div class="section-title">作文主旨</div>
-                    <div class="part-content">${structured.subject || '无主旨说明'}</div>
-                </div>
-                
-                <div class="outline-section">
-                    <div class="section-title">提纲结构</div>
-                    <div class="parts-container">
-            `;
-            
-            if (structured.parts && structured.parts.length > 0) {
-                for (var i=0; i<structured.parts.length; i++) {
-                    html += `
-                        <div class="part-item">
-                            <div class="part-header">${structured.parts[i].part_title || '未命名部分'}</div>
-                            <div class="part-content">${structured.parts[i].content || '无内容'}</div>
-                    `;
-                    
-                    if (structured.parts[i].examples && structured.parts[i].examples.length > 0) {
-                        html += `
-                            <div class="part-examples">
-                                <strong>例子:</strong>
-                                <ul class="examples-list">
-                                    ${structured.parts[i].examples.map(ex => `<li>${ex}</li>`).join('')}
-                                </ul>
-                            </div>
-                        `;
-                    }
-                    
-                    if (structured.parts[i].quotes && structured.parts[i].quotes.length > 0) {
-                        html += `
-                            <div class="part-quotes">
-                                <strong>引用:</strong>
-                                <ul class="quotes-list">
-                                    ${structured.parts[i].quotes.map(quote => `<li>${quote}</li>`).join('')}
-                                </ul>
-                            </div>
-                        `;
-                    }
-                    
-                    if (structured.parts[i].example_content && structured.parts[i].example_content !== '空') {
-                        html += `
-                            <div class="part-content">
-                                <strong>详细内容:</strong><br>
-                                ${structured.parts[i].example_content}
-                            </div>
-                        `;
-                    }
-
-                    if(ai_judgement.parts[i].comments && ai_judgement.parts[i].comments.length > 0) {
-                        html += `
-                            <div class="part-comments">
-                                <strong>🤖评语:</strong>
-                                <ul class="comments-list">
-                                    ${ai_judgement.parts[i].comments.map(comment => `<li>${comment}</li>`).join('')}
-                                </ul>
-                            </div>
-                        `;
-                    }
-                    
-                    html += `</div>`;
-                };
-            } else {
-                html += '<div class="part-item">暂无结构化内容</div>';
-            }
-            
-            html += `
-                    </div>
-                </div>
-            `;
-            
-            // 添加AI评判结果
-            if (outline.ai_judgement) {
-                html += renderAIJudgement(outline.ai_judgement);
-            }
-            
-            container.innerHTML = html;
-        }
-
         // 渲染标准提纲
-        function renderStandardOutline(outline) {
+        function renderStandardOutline(outline, options = {}) {
             const container = document.getElementById('outlineContent');
-            
+            const outlineType = options.outlineType || 'standard';
+            const typeLabel = outlineType === 'user' ? '用户提纲' : '标准提纲';
+
             let html = `
                 <div class="outline-header">
                     <div class="outline-title">${outline.title || '无标题'}</div>
-                    <div class="outline-type">标准提纲</div>
+                    <div class="outline-type">${typeLabel}</div>
                 </div>
                 
                 <div class="outline-section">
@@ -726,7 +664,7 @@
                     <div class="section-title">提纲结构</div>
                     <div class="parts-container">
             `;
-            
+
             if (outline.parts && outline.parts.length > 0) {
                 outline.parts.forEach(part => {
                     html += `
@@ -734,7 +672,7 @@
                             <div class="part-header">${part.part_title || '未命名部分'}</div>
                             <div class="part-content">${part.content || '无内容'}</div>
                     `;
-                    
+
                     if (part.examples && part.examples.length > 0) {
                         html += `
                             <div class="part-examples">
@@ -745,7 +683,7 @@
                             </div>
                         `;
                     }
-                    
+
                     if (part.quotes && part.quotes.length > 0) {
                         html += `
                             <div class="part-quotes">
@@ -756,7 +694,7 @@
                             </div>
                         `;
                     }
-                    
+
                     if (part.example_content && part.example_content !== '空') {
                         html += `
                             <div class="part-content">
@@ -765,25 +703,25 @@
                             </div>
                         `;
                     }
-                    
+
                     html += `</div>`;
                 });
             } else {
                 html += '<div class="part-item">暂无结构化内容</div>';
             }
-            
+
             html += `
                     </div>
                 </div>
             `;
-            
+
             container.innerHTML = html;
         }
 
         // 渲染审题思路
         function renderThinkingProcess(thinkData) {
             const container = document.getElementById('outlineContent');
-            
+
             let html = `
                 <div class="outline-header">
                     <div class="outline-title">审题思路分析</div>
@@ -794,11 +732,11 @@
                     <div class="section-title">审题分析过程</div>
                     <div class="thinking-content">
             `;
-            
+
             if (thinkData) {
                 // 将think字段的内容按行分割并处理markdown格式
                 const thinkContent = thinkData.replace(/\\n/g, '\n');
-                
+
                 // 简单的markdown渲染
                 let processedContent = thinkContent
                     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')  // 粗体
@@ -806,17 +744,17 @@
                     .replace(/`(.+?)`/g, '<code>$1</code>')  // 代码
                     .replace(/\n\n/g, '</p><p>')  // 段落
                     .replace(/\n/g, '<br>');  // 换行
-                
+
                 html += `<p>${processedContent}</p>`;
             } else {
                 html += '<p>暂无审题思路分析</p>';
             }
-            
+
             html += `
                     </div>
                 </div>
             `;
-            
+
             container.innerHTML = html;
         }
 
@@ -835,15 +773,15 @@
                             <div class="score-value">${judgement.overall_score || 0}</div>
                         </div>
             `;
-            
+
             if (judgement.detailed_scores) {
                 const scoreLabels = {
                     structure: '结构',
                     theme_relevance: '主题',
-                    language: '语言', 
+                    language: '语言',
                     creativity: '创意'
                 };
-                
+
                 Object.entries(judgement.detailed_scores).forEach(([key, score]) => {
                     html += `
                         <div class="score-item">
@@ -853,9 +791,9 @@
                     `;
                 });
             }
-            
+
             html += `</div>`;
-            
+
             if (judgement.strengths && judgement.strengths.length > 0) {
                 html += `
                     <div class="feedback-section strengths">
@@ -866,7 +804,7 @@
                     </div>
                 `;
             }
-            
+
             if (judgement.improvements && judgement.improvements.length > 0) {
                 html += `
                     <div class="feedback-section improvements">
@@ -877,7 +815,7 @@
                     </div>
                 `;
             }
-            
+
             if (judgement.comments) {
                 html += `
                     <div class="comments-section">
@@ -886,7 +824,7 @@
                     </div>
                 `;
             }
-            
+
             html += `</div>`;
             return html;
         }
@@ -895,4 +833,5 @@
         document.addEventListener('DOMContentLoaded', initializePage);
     </script>
 </body>
+
 </html>

@@ -161,6 +161,43 @@ def generate_user_outline(user_content):
     else:
         return result
 
+def cmp_outline(user_outline, sessionid):
+    """使用AI比较用户提纲vs标准思路"""
+    prompt_template = load_prompt_template('ai_cmp_outline.txt')
+    if not prompt_template:
+        return {"success": False, "error": "Failed to load outline judgment prompt"}
+    
+    # get std thinking for judgement
+    session = load_session_data(sessionid)
+    question_id = session.get('question', 'default')
+    topic = get_essay_topics(question_id)
+    std_thinking = topic.get("think", "")
+    std_outilnes = topic.get("outlines", [])
+    
+    # 替换模板中的内容
+    prompt = str(random.random()) + prompt_template  # 防止缓存
+    prompt = prompt.replace('$USER_OUTLINE', json.dumps(user_outline, ensure_ascii=False, indent=2))
+    prompt = prompt.replace('$STD_OUTLINE', json.dumps(std_outilnes, ensure_ascii=False, indent=2))
+    prompt = prompt.replace('$STD_THINKING', std_thinking)
+
+    messages = [
+        {"role": "user", "content": prompt}
+    ]
+    result = call_llm_api(messages)
+    
+    with open("logs_outline_comparison.txt", "w", encoding="utf-8") as log_file:
+        log_file.write(f"prompt:\n{prompt}\n\nresponse:\n{result['content']}\n")
+
+    if result["success"]:
+        # 提取JSON内容
+        json_content = extract_json_from_response(result["content"])
+        if json_content:
+            return {"success": True, "judgement": json_content}
+        else:
+            return {"success": False, "error": "Failed to extract JSON from AI judgment response"}
+    else:
+        return result   # return {success: False} and error message directly from call_llm_api
+
 def judge_outline(user_content, generated_outline, sessionid):
     """使用AI评价提纲"""
     prompt_template = load_prompt_template('ai_judge_outline.txt')
@@ -700,21 +737,21 @@ def submit_essay_outline():
             if outline_result["success"]:
                 # 使用AI评价提纲
                 logger.info(f"Judging outline using AI for session {sessionid}")
-                judgement_result = judge_outline(ocr_result["text_content"], outline_result["outline"], sessionid)
+                cmp_result = cmp_outline(ocr_result["text_content"], outline_result["outline"], sessionid)
                 
                 # 准备保存到session的数据
                 outline_data = {
                     "text_content": ocr_result["text_content"],
                     "structured_content": outline_result["outline"],
-                    "ai_judgement": judgement_result["judgement"] if judgement_result["success"] else {},
+                    "cmp": cmp_result["judgement"] if cmp_result["success"] else {},
                     "submitted_at": datetime.now().isoformat(),
                     "original_filename": secure_filename(file.filename)
                 }
                 
                 # 如果AI评价失败，记录错误但不影响整体流程
-                if not judgement_result["success"]:
-                    outline_data["judgement_error"] = judgement_result["error"]
-                    logger.warning(f"AI judgement failed for session {sessionid}: {judgement_result['error']}")
+                if not cmp_result["success"]:
+                    outline_data["judgement_error"] = cmp_result["error"]
+                    logger.warning(f"AI judgement failed for session {sessionid}: {cmp_result['error']}")
                 
                 # 记录提交信息到session文件
                 session_data = load_session_data(sessionid)
@@ -728,8 +765,8 @@ def submit_essay_outline():
                     "message": "Outline submitted and processed successfully",
                     "text_content": ocr_result["text_content"][:200] + "..." if len(ocr_result["text_content"]) > 200 else ocr_result["text_content"],
                     "structured_content": outline_result["outline"],
-                    "ai_judgement": outline_data["ai_judgement"],
-                    "judgement_success": judgement_result["success"]
+                    "cmp": outline_data["cmp"],
+                    "judgement_success": cmp_result["success"]
                 })
             else:
                 # AI生成失败，但OCR成功，仍然保存基本信息
@@ -738,7 +775,7 @@ def submit_essay_outline():
                 outline_data = {
                     "text_content": ocr_result["text_content"],
                     "structured_content": {},
-                    "ai_judgement": {},
+                    "cmp": {},
                     "generation_error": outline_result["error"],
                     "submitted_at": datetime.now().isoformat(),
                     "original_filename": secure_filename(file.filename)
