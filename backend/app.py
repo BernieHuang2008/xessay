@@ -34,7 +34,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)  # 允许跨域请求
+CORS(app, resources={r"/*": {"origins": ["https://berniehuang2008.github.io", "http://localhost:3000"]}})
 
 # 配置
 DATA_FOLDER = 'data'
