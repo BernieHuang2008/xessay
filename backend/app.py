@@ -737,7 +737,7 @@ def submit_essay_outline():
             if outline_result["success"]:
                 # 使用AI评价提纲
                 logger.info(f"Judging outline using AI for session {sessionid}")
-                cmp_result = cmp_outline(ocr_result["text_content"], outline_result["outline"], sessionid)
+                cmp_result = cmp_outline(outline_result["outline"], sessionid)
                 
                 # 准备保存到session的数据
                 outline_data = {
